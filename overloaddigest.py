@@ -117,6 +117,7 @@ def CNN_grabber(url):
 
     return all_articles
 
+# Define fox_grabber
 def fox_grabber(url):
     response = requests.get(url)
 
@@ -127,8 +128,8 @@ def fox_grabber(url):
     # Parse all html text as lxml
     soup = BeautifulSoup(response.text, 'lxml')
 
-    all_articles
-
+    # Find all links to articles
+    all_links = soup.find_all('header', class_=('info-header', 'title '))
 
 def main():
     cnn_url = 'https://www.cnn.com'
