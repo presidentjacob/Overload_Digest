@@ -26,7 +26,8 @@ separator = '-' * 70
 # Define auto_scroll
 def auto_scroll(text_widget):
     # Set speed low, 0.000005 seems to work best for nice speed
-    speed = 0.000005
+    total_lines = int(text_widget.index('end-1c').split('.')[0])
+    speed = .05 / total_lines
     current_position = text_widget.yview()[0]
 
     # Reset position to the top if the autoscroll reaches the bottom.
