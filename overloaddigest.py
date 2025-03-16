@@ -123,6 +123,10 @@ def fox_grabber(url):
     # If no response return
     if response.status_code != 200:
         return
+    
+    # Parse all html text as lxml
+    soup = BeautifulSoup(response.text, 'lxml')
+    
 
 def main():
     cnn_url = "https://www.cnn.com"
