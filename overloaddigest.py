@@ -18,7 +18,14 @@ class Article:
         self.paragraphs = ''
     def __str__(self):
         return f'\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
-    
+
+# Create different user agents to look human
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+]
+
 # Separator between articles
 separator = '-' * 70
 
@@ -228,11 +235,26 @@ def fox_grabber(url):
 
 # Define nytimes_grabber
 def npr_grabber(url):
-    response = requests.get(url)
+    # Use headers to make it look as if program is a user and not a bot
+    header = {
+        'User-Agent': f'{user_agents[0]}',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Referer': 'http://www.google.com/',
+        'Upgrade-Insecure-Requests': '1',
+    }
 
-    if response != '200':
-        print(f'Error: {response.status_code}')
+    try:
+        response = requests.get(url, header)
+        # print(response.text)
+    except Exception as e:
+        print(f'Error: {e}')
         return
+
+    # if response != '200':
+    #     print(f'Error: {response.status_code}')
+    #     return
     
     # Setup a readable text
     soup = BeautifulSoup(response.text, 'lxml')
@@ -241,9 +263,6 @@ def npr_grabber(url):
     links_div = soup.find('div', class_='story-text')
 
     all_articles = []
-
-    print('Printing links div')
-    print(links_div)
 
     for link in links_div.find_all('a', href=True):
         href = link.get('href')
