@@ -25,7 +25,7 @@ separator = '-' * 70
 
 # Define auto_scroll
 def auto_scroll(text_widget):
-    # Set speed low, 0.000005 seems to work best for nice speed
+    # Set each to scroll at the exact same speed
     total_lines = int(text_widget.index('end-1c').split('.')[0])
     speed = .05 / total_lines
     current_position = text_widget.yview()[0]
