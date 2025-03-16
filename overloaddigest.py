@@ -8,7 +8,6 @@ import tkinter.font as font
 from tkinter import Label
 from bs4 import BeautifulSoup
 
-
 # Setup an article class to contain article information
 class Article:
     def __init__(self):
@@ -19,7 +18,7 @@ class Article:
         self.paragraphs = ''
     def __str__(self):
         return f'\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
-
+    
 # Separator between articles
 separator = '-' * 70
 
@@ -131,6 +130,7 @@ def CNN_grabber(url):
     return all_articles
 
 def fox(url):
+    # Exception handling, return nothing if Fox freezes
     try:
         response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
@@ -206,7 +206,6 @@ def fox_grabber(url):
 
     all_articles = []
     # Setup seen headlines so headlines are not displayed twice.
-    seen_headlines = set()
 
     # If links exist
     if all_links:
@@ -227,17 +226,45 @@ def fox_grabber(url):
 
     return all_articles
 
+# Define nytimes_grabber
+def npr_grabber(url):
+    response = requests.get(url)
+
+    if response != '200':
+        print(f'Error: {response.status_code}')
+        return
+    
+    # Setup a readable text
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all links to articles
+    links_div = soup.find('div', class_='story-text')
+
+    all_articles = []
+
+    print('Printing links div')
+    print(links_div)
+
+    for link in links_div.find_all('a', href=True):
+        href = link.get('href')
+        print(href)
+
+    return all_articles
+
 def main():
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
+    npr_url = 'https://www.npr.org'
     cnn_articles = CNN_grabber(cnn_url)
     fox_articles = fox_grabber(fox_url)
+    npr_articles = npr_grabber(npr_url)
 
     # Create main window
     window = tk.Tk()
     window.title('Overload Digest')
-    window.geometry('1000x1000')
+    window.geometry('640x480')
     window.configure(background='black')
+    window.state('zoomed')
 
     # Create title headline on Overload Digest
     T1 = tk.Text(window, bg='black', fg='white', insertbackground='white', cursor='arrow')
