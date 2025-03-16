@@ -93,7 +93,6 @@ def CNN_grabber(url):
 
     # if no response return
     if response.status_code != 200:
-        print("Invalid URL.")
         return
 
     # Parse all text to lxml
@@ -118,10 +117,18 @@ def CNN_grabber(url):
 
     return all_articles
 
+def fox_grabber(url):
+    response = requests.get(url)
+
+    # If no response return
+    if response.status_code != 200:
+        return
 
 def main():
     cnn_url = "https://www.cnn.com"
+    fox_url = "https://www.foxnews.com"
     cnn_articles = CNN_grabber(cnn_url)
+    fox_articles = fox_grabber(fox_url)
 
     # Create main window
     window = tk.Tk()
