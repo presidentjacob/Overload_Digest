@@ -145,7 +145,8 @@ def fox_grabber(url):
             for link in links.find_all('a', href=True):
                 href = link.get('href')
                 # Ignore anything that isn't news
-                if 'foxnews' in href or 'foxbusiness' in href or 'foxweather' in href:
+                if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather'])
+                    and '/video/' not in href):
                     if href.startswith('/'):
                         href = https + href
 
