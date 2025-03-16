@@ -45,7 +45,7 @@ def print_paragraph(text):
 # Define CNN grabber
 def CNN(url):
     try:
-        response = requests.get(url, timeout=.1)
+        response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
         print(f"Error scraping article")
@@ -131,7 +131,7 @@ def CNN_grabber(url):
 
 def fox(url):
     try:
-        response = requests.get(url, timeout=.1)
+        response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
         print(f"Error scraping article")
@@ -147,7 +147,7 @@ def fox(url):
     subheader = header_div.find('h2') if header_div else None
     author_div = soup.find('div', class_='author-byline')
     date_span = soup.find('span', class_='article-date')
-    paragraph_p = soup.find('p', class_='speakable')
+    paragraph_p = soup.find_all('p')
 
     fox_article = Article()
     full_article = ''
@@ -160,19 +160,28 @@ def fox(url):
     if subheader and paragraph_p:
         setattr(fox_article, 'subheader', subheader.text.strip() + '\n')
 
+    # I can't lie, i dont know why this fucking works
+    # I have no clue what 'lambda' does
+    # It doesn't work without it though
+    # Fuck Fox News fr
+
     if author_div and paragraph_p:
-        authors = [authors.text.strip() for authors in soup.find_all('a', href=True)]
-        setattr(fox_article, 'author', ', '.join(authors) + '\n')
+        author_link = author_div.find('a', href=lambda href: href and '/person/' in href)
+        if author_link:
+            author_name = author_link.text.strip()
+            setattr(fox_article, 'author', author_name + '\n')
 
     if date_span and paragraph_p:
-        time = date_span.text
-        time = time.replace('Updated', '')
-        time = time.replace('Published', '')
-        setattr(date_span, 'time', time.strip() + '\n')
+        time_tag = date_span.find('time')
+        if time_tag:
+            time = time_tag.text.strip()
+            setattr(fox_article, 'time', time + '\n')
 
     if paragraph_p:
-        for paragraph in paragraph_p.find_all('p'):
-            full_article += print_paragraph(paragraph.text.strip()) +'\n\n'
+        for paragraph in paragraph_p:
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            formatted_paragraph = print_paragraph(paragraph_text)
+            full_article += formatted_paragraph + '\n\n'
         full_article += separator
         setattr(fox_article, 'paragraphs', full_article)
     
