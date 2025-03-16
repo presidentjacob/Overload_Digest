@@ -106,9 +106,9 @@ def CNN_grabber(url):
         for div in links_div:
             for link in div.find_all('a',href=True):
                 href = link.get('href')
+                # Improve runtime and make sure articles are not read twice
                 if (href in seen_urls or any(exclude in href for exclude in ['/podcasts', '/fashion', '/deals', '/interactive', '/video', '/bleacherreport'])):
                     continue
-                print(href)
 
                 seen_urls.add(href)
 
@@ -116,10 +116,30 @@ def CNN_grabber(url):
                     href = url + href
 
                 article = CNN(href)
+
                 if article:
                     all_articles.append(article)
 
     return all_articles
+
+def fox(url):
+    response = requests.get(url)
+
+    # Parse into soup as lxml
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    header_div = soup.find('div', class_='article-meta article-meta-upper')
+    headline = header_div.find('h1') if header_div else None
+    subheader = header_div.find('h2') if header_div else None
+    author_div = soup.find('div', class_='author-byline')
+    date_span = soup.find('span', class_='article-date')
+    paragraph_p = soup.find('p', class_='speakable')
+
+    fox_article = Article()
+    full_article = ''
+
+    
+    # return fox_article
 
 # Define fox_grabber
 def fox_grabber(url):
@@ -152,6 +172,8 @@ def fox_grabber(url):
                 if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather']) and not '/video' in href and not '/radio' in href):
                     if href.startswith('/'):
                         href = https + href
+                    
+                    
 
 
     return all_articles
