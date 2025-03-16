@@ -44,7 +44,15 @@ def print_paragraph(text):
 
 # Define CNN grabber
 def CNN(url):
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=.1)
+        soup = BeautifulSoup(response.text, 'lxml')
+    except Exception as e:
+        print(f"Error scraping article")
+        return None
+    
+    if response.status_code != 200:
+        return None
 
     # Parse into soup as lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -109,7 +117,6 @@ def CNN_grabber(url):
                 # Improve runtime and make sure articles are not read twice
                 if (href in seen_urls or any(exclude in href for exclude in ['/podcasts', '/fashion', '/deals', '/interactive', '/video', '/bleacherreport'])):
                     continue
-
                 seen_urls.add(href)
 
                 if href.startswith('/'):
@@ -123,8 +130,15 @@ def CNN_grabber(url):
     return all_articles
 
 def fox(url):
-    response = requests.get(url)
-
+    try:
+        response = requests.get(url, timeout=.1)
+        soup = BeautifulSoup(response.text, 'lxml')
+    except Exception as e:
+        print(f"Error scraping article")
+        return None
+    
+    if response.status_code != 200:
+        return
     # Parse into soup as lxml
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -138,8 +152,31 @@ def fox(url):
     fox_article = Article()
     full_article = ''
 
+    # Only add information to the article class only if paragraph_div exists
+    # If there are no paragraphs, the article will not be added.
+    if headline and paragraph_p:
+        setattr(fox_article, 'header', (headline.text.strip()))
+
+    if subheader and paragraph_p:
+        setattr(fox_article, 'subheader', subheader.text.strip() + '\n')
+
+    if author_div and paragraph_p:
+        authors = [authors.text.strip() for authors in soup.find_all('a', href=True)]
+        setattr(fox_article, 'author', ', '.join(authors) + '\n')
+
+    if date_span and paragraph_p:
+        time = date_span.text
+        time = time.replace('Updated', '')
+        time = time.replace('Published', '')
+        setattr(date_span, 'time', time.strip() + '\n')
+
+    if paragraph_p:
+        for paragraph in paragraph_p.find_all('p'):
+            full_article += print_paragraph(paragraph.text.strip()) +'\n\n'
+        full_article += separator
+        setattr(fox_article, 'paragraphs', full_article)
     
-    # return fox_article
+    return fox_article
 
 # Define fox_grabber
 def fox_grabber(url):
@@ -172,9 +209,11 @@ def fox_grabber(url):
                 if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather']) and not '/video' in href and not '/radio' in href):
                     if href.startswith('/'):
                         href = https + href
-                    
-                    
 
+                    article = fox(href)
+
+                    if article:
+                        all_articles.append(article)
 
     return all_articles
 
@@ -222,6 +261,9 @@ def main():
     # Insert article content to text_widgets
     for article in cnn_articles[::-1]:
         text_widgets[0].insert('1.0', article.__str__())
+    
+    for article in fox_articles:
+        text_widgets[1].insert('1.0', article.__str__())
 
     # Disable configuration so user cannot type in widget
     for widget in text_widgets:
