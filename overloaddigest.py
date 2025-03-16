@@ -101,19 +101,23 @@ def CNN_grabber(url):
     links_div = soup.find_all('div', class_=('container__field-links'))
 
     all_articles = []
-    seen_headlines = set()
+    seen_urls = set()
     if links_div:
         for div in links_div:
             for link in div.find_all('a',href=True):
                 href = link.get('href')
+                if (href in seen_urls or any(exclude in href for exclude in ['/podcasts', '/fashion', '/deals', '/interactive', '/video', '/bleacherreport'])):
+                    continue
+                print(href)
+
+                seen_urls.add(href)
 
                 if href.startswith('/'):
                     href = url + href
 
                 article = CNN(href)
-                if article and article.header not in seen_headlines:
+                if article:
                     all_articles.append(article)
-                    seen_headlines.add(article.header)
 
     return all_articles
 
@@ -145,8 +149,7 @@ def fox_grabber(url):
             for link in links.find_all('a', href=True):
                 href = link.get('href')
                 # Ignore anything that isn't news
-                if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather'])
-                    and '/video/' not in href):
+                if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather']) and not '/video' in href and not '/radio' in href):
                     if href.startswith('/'):
                         href = https + href
 
