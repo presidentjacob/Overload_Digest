@@ -98,7 +98,7 @@ def CNN_grabber(url):
     # Parse all text to lxml
     soup = BeautifulSoup(response.text, 'lxml')
     # Find all links to articles
-    links_div = soup.find_all('div', class_=('container__field-links', 'container_title'))
+    links_div = soup.find_all('div', class_=('container__field-links'))
 
     all_articles = []
     seen_headlines = set()
@@ -120,6 +120,7 @@ def CNN_grabber(url):
 # Define fox_grabber
 def fox_grabber(url):
     response = requests.get(url)
+    https = 'https:'
 
     # If no response return
     if response.status_code != 200:
@@ -129,7 +130,27 @@ def fox_grabber(url):
     soup = BeautifulSoup(response.text, 'lxml')
 
     # Find all links to articles
-    all_links = soup.find_all('header', class_=('info-header', 'title '))
+    all_links = soup.find_all('header', class_=('info-header'))
+    
+
+    all_articles = []
+    # Setup seen headlines so headlines are not displayed twice.
+    seen_headlines = set()
+
+    # If links exist
+    if all_links:
+        # For all found
+        for links in all_links:
+            # Find 'a' who's href is true
+            for link in links.find_all('a', href=True):
+                href = link.get('href')
+                # Ignore anything that isn't news
+                if 'foxnews' in href or 'foxbusiness' in href:
+                    if href.startswith('/'):
+                        href = https + href
+
+
+    return all_articles
 
 def main():
     cnn_url = 'https://www.cnn.com'
