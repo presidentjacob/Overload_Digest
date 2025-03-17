@@ -55,7 +55,7 @@ def CNN(url):
         response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
-        print(f"Error scraping article")
+        print(f'Error scraping article')
         return None
     
     if response.status_code != 200:
@@ -108,7 +108,7 @@ def CNN_grabber(url):
 
     # if no response return
     if response.status_code != 200:
-        return
+        return None
 
     # Parse all text to lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -142,11 +142,11 @@ def fox(url):
         response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
-        print(f"Error scraping article")
+        print(f'Error scraping article')
         return None
     
     if response.status_code != 200:
-        return
+        return None
     # Parse into soup as lxml
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -168,10 +168,7 @@ def fox(url):
     if subheader and paragraph_p:
         setattr(fox_article, 'subheader', subheader.text.strip() + '\n')
 
-    # I can't lie, i dont know why this fucking works
-    # I have no clue what 'lambda' does
-    # It doesn't work without it though
-    # Fuck Fox News fr
+    # No clue what lambda does but this is the only way to get it working
 
     if author_div and paragraph_p:
         author_link = author_div.find('a', href=lambda href: href and '/person/' in href)
@@ -188,8 +185,9 @@ def fox(url):
     if paragraph_p:
         for paragraph in paragraph_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
-            formatted_paragraph = print_paragraph(paragraph_text)
-            full_article += formatted_paragraph + '\n\n'
+            if 'FOX News' not in paragraph and 'subcribed to' not in paragraph_text:
+                formatted_paragraph = print_paragraph(paragraph_text)
+                full_article += formatted_paragraph + '\n\n'
         full_article += separator
         setattr(fox_article, 'paragraphs', full_article)
     
@@ -202,7 +200,7 @@ def fox_grabber(url):
 
     # If no response return
     if response.status_code != 200:
-        return
+        return None
     
     # Parse all html text as lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -250,7 +248,7 @@ def npr_grabber(url):
         # print(response.text)
     except Exception as e:
         print(f'Error: {e}')
-        return
+        return None
 
     # if response != '200':
     #     print(f'Error: {response.status_code}')
@@ -274,6 +272,7 @@ def main():
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
+
     cnn_articles = CNN_grabber(cnn_url)
     fox_articles = fox_grabber(fox_url)
     npr_articles = npr_grabber(npr_url)
