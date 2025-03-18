@@ -7,6 +7,8 @@ from tkinter import scrolledtext
 import tkinter.font as font
 from tkinter import Label
 from bs4 import BeautifulSoup
+import threading
+import queue
 
 # Setup an article class to contain article information
 class Article:
@@ -29,6 +31,25 @@ user_agents = [
 # Separator between articles
 separator = '-' * 70
 
+# Setup queue for each article to be scraped
+update_queue = queue.Queue()
+
+# Update the gui, and recursively update
+def update_gui(window):
+    try:
+        while True:
+            # Take the queue content and insert in the widget
+            widget, text = update_queue.get_nowait()
+            widget.config(state='normal')
+            widget.insert('end', text)
+            widget.config(state='disable')
+    except queue.Empty:
+        pass
+
+    window.after(100, update_gui, window)
+            
+
+
 # Define auto_scroll
 def auto_scroll(text_widget):
     # Set each to scroll at the exact same speed
@@ -49,13 +70,17 @@ def auto_scroll(text_widget):
 #     wrapped_text = textwrap.fill(text, line_length)
 #     return wrapped_text
 
+# Function for threading
+def scrape_and_print(function, url, widget):
+        function(url, widget)
+
 # Define CNN grabber
 def CNN(url):
     try:
         response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
-        print(f'Error scraping article')
+        print(f'Error scraping CNN article.')
         return None
     
     if response.status_code != 200:
@@ -103,7 +128,7 @@ def CNN(url):
     return cnn_article
 
 # Define a grabber for CNN.com
-def CNN_grabber(url):
+def CNN_grabber(url, text_widget):
     response = requests.get(url)
 
     # if no response return
@@ -115,7 +140,6 @@ def CNN_grabber(url):
     # Find all links to articles
     links_div = soup.find_all('div', class_=('container__field-links'))
 
-    all_articles = []
     seen_urls = set()
     if links_div:
         for div in links_div:
@@ -132,9 +156,9 @@ def CNN_grabber(url):
                 article = CNN(href)
 
                 if article:
-                    all_articles.append(article)
+                    update_queue.put((text_widget, article.__str__()))
 
-    return all_articles
+    return
 
 def fox(url):
     # Exception handling, return nothing if Fox freezes
@@ -142,11 +166,12 @@ def fox(url):
         response = requests.get(url, timeout=.5)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
-        print(f'Error scraping article')
+        print(f'Error scraping fox article.')
         return None
     
     if response.status_code != 200:
         return None
+    
     # Parse into soup as lxml
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -194,7 +219,7 @@ def fox(url):
     return fox_article
 
 # Define fox_grabber
-def fox_grabber(url):
+def fox_grabber(url, text_widget):
     response = requests.get(url)
     https = 'https:'
 
@@ -207,10 +232,6 @@ def fox_grabber(url):
 
     # Find all links to articles
     all_links = soup.find_all('header', class_=('info-header'))
-    
-
-    all_articles = []
-    # Setup seen headlines so headlines are not displayed twice.
 
     # If links exist
     if all_links:
@@ -227,12 +248,12 @@ def fox_grabber(url):
                     article = fox(href)
 
                     if article:
-                        all_articles.append(article)
+                        update_queue.put((text_widget, article.__str__()))
 
-    return all_articles
+    return
 
 # Define nytimes_grabber
-def npr_grabber(url):
+def npr_grabber(url, text_widget):
     # Use headers to make it look as if program is a user and not a bot
     header = {
         'User-Agent': f'{user_agents[0]}',
@@ -266,18 +287,12 @@ def npr_grabber(url):
         href = link.get('href')
         print(href)
 
-    return all_articles
+    return
 
 def main():
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
-
-    cnn_articles = CNN_grabber(cnn_url)
-    fox_articles = fox_grabber(fox_url)
-    npr_articles = npr_grabber(npr_url)
-
-    
 
     # Create main window
     window = tk.Tk()
@@ -315,16 +330,20 @@ def main():
         frame.columnconfigure(i, weight=1)
     frame.rowconfigure(0, weight=1)
 
-    # Insert article content to text_widgets
-    for article in cnn_articles[::-1]:
-        text_widgets[0].insert('1.0', article.__str__())
-    
-    for article in fox_articles:
-        text_widgets[1].insert('1.0', article.__str__())
+    # CNN_grabber(cnn_url, text_widgets[0])
+    # fox_grabber(fox_url, text_widgets[1])
+    # npr_grabber(npr_url, text_widgets[2])
+
+    # Run threads to update per each article scraped.
+    threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[2],)).start()
+
+    window.after(100, update_gui, window)
 
     # Disable configuration so user cannot type in widget
-    for widget in text_widgets:
-        widget.config(state='disable')
+    # for widget in text_widgets:
+    #     widget.config(state='disable')
 
     # Initialize window
     window.mainloop()
