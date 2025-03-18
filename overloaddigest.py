@@ -44,10 +44,10 @@ def auto_scroll(text_widget):
         text_widget.yview_moveto(0.0)
         text_widget.after(50, lambda: auto_scroll(text_widget))
 
-def print_paragraph(text):
-    line_length = 70
-    wrapped_text = textwrap.fill(text, line_length)
-    return wrapped_text
+# def print_paragraph(text):
+#     line_length = 70
+#     wrapped_text = textwrap.fill(text, line_length)
+#     return wrapped_text
 
 # Define CNN grabber
 def CNN(url):
@@ -96,7 +96,7 @@ def CNN(url):
 
     if paragraph_div:
         for paragraph in paragraph_div.find_all('p'):
-            full_article += print_paragraph(paragraph.text.strip()) +'\n\n'
+            full_article += (paragraph.text.strip() +'\n\n')
         full_article += separator
         setattr(cnn_article, 'paragraphs', full_article)
 
@@ -186,7 +186,7 @@ def fox(url):
         for paragraph in paragraph_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
             if 'FOX News' not in paragraph and 'subcribed to' not in paragraph_text:
-                formatted_paragraph = print_paragraph(paragraph_text)
+                formatted_paragraph = paragraph_text
                 full_article += formatted_paragraph + '\n\n'
         full_article += separator
         setattr(fox_article, 'paragraphs', full_article)
@@ -276,6 +276,8 @@ def main():
     cnn_articles = CNN_grabber(cnn_url)
     fox_articles = fox_grabber(fox_url)
     npr_articles = npr_grabber(npr_url)
+
+    
 
     # Create main window
     window = tk.Tk()
