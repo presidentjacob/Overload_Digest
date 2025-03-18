@@ -22,7 +22,7 @@ class Article:
         self.time = ''
         self.paragraphs = ''
     def __str__(self):
-        return f'\n\t\t\t{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n\t\t\t\t{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
 
 # Use headers to make it look as if program is a user and not a bot
 header = {
@@ -35,7 +35,7 @@ header = {
 }
 
 # Separator between articles
-separator = '-' * 80
+separator = '-' * 77
 
 # Setup queue for each article to be scraped
 update_queue = queue.Queue()
@@ -372,12 +372,26 @@ def main():
     window.state('zoomed')
 
     # Create title headline on Overload Digest
-    T1 = tk.Text(window, bg='black', fg='white', insertbackground='white', cursor='arrow')
-    T1.tag_configure('center', justify='center', font=('Times New Roman', 50))
-    T1.insert('1.0', 'OVERLOAD DIGEST')
-    T1.tag_add('center', '1.0', 'end')
-    T1.config(state='disable')
-    T1.pack(expand=True, fill='both')
+    # T1 = tk.Text(window, bg='black', fg='gray50', insertbackground='white', cursor='arrow')
+    # T1.tag_configure('center', justify='center', font=('Times New Roman', 50))
+    # T1.insert('1.0', 'OVERLOAD DIGEST')
+    # T1.tag_add('center', '1.0', 'end')
+    # T1.config(state='disable')
+    # T1.pack(side='top', fill='x', padx=20, pady=(20,5))
+
+    # T2 = tk.Text(window, bg='black', fg='gray45', insertbackground='white', cursor='arrow')
+    # T2.tag_configure('center', justify='center', font=('Times New Roman', 35))
+    # T2.insert('1.0', 'NEWS DOESN\'T GET WORSE THAN THIS')
+    # T2.tag_add('center', '1.0', 'end')
+    # T2.config(state='disable')
+    # T2.pack(side='top', fill='x', padx=20, pady=(5,20))
+
+    T1 = tk.Label(window, text='オーバーロード・ダイジェスト', bg='black', fg='gray50', font=('MS Gothic', 35))
+    T1.pack(side='top', fill='x')
+    T2 = tk.Label(window, text='OVERLOAD DIGEST', bg='black', fg='gray50', font=('Fixedsys', 35))
+    T2.pack(side='top', fill='x')
+    T3 = tk.Label(window, text='超载摘要', bg='black', fg='gray50', font=('Microsoft YaHei', 35))
+    T3.pack(side='top', fill='x')
 
     frame = tk.Frame(window, bg='black')
     frame.pack(fill='both', expand=True)
@@ -389,7 +403,7 @@ def main():
     # Setup text widgets for articles to be inserted.
     for i in range(3):
         text = tk.Text(frame, wrap='word', bg='black', fg='white', insertbackground='white', cursor='arrow',
-                       yscrollcommand=scrollbar.set, font=('Times New Roman', 15))
+                       yscrollcommand=scrollbar.set, font=('Fixedsys', 16))
         text.grid(row=0, column=i, sticky='nsew', padx = 10, pady=10)
         text.config(state='disable')
         text_widgets.append(text)
