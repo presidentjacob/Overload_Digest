@@ -9,27 +9,33 @@ from tkinter import Label
 from bs4 import BeautifulSoup
 import threading
 import queue
+import time
+import random
 
 # Setup an article class to contain article information
 class Article:
-    def __init__(self):
+    def __init__(self, source):
+        self.source = source
         self.header = ''
         self.subheader = ''
         self.author = ''
         self.time = ''
         self.paragraphs = ''
     def __str__(self):
-        return f'\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n\t\t\t{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
 
-# Create different user agents to look human
-user_agents = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-]
+# Use headers to make it look as if program is a user and not a bot
+header = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Referer': 'http://www.google.com/',
+    'Upgrade-Insecure-Requests': '1',
+}
 
 # Separator between articles
-separator = '-' * 70
+separator = '-' * 80
 
 # Setup queue for each article to be scraped
 update_queue = queue.Queue()
@@ -46,15 +52,13 @@ def update_gui(window):
     except queue.Empty:
         pass
 
-    window.after(100, update_gui, window)
-            
-
+    window.after(10, update_gui, window)
 
 # Define auto_scroll
 def auto_scroll(text_widget):
     # Set each to scroll at the exact same speed
     total_lines = int(text_widget.index('end-1c').split('.')[0])
-    speed = .05 / total_lines
+    speed = .02 / total_lines
     current_position = text_widget.yview()[0]
 
     # Reset position to the top if the autoscroll reaches the bottom.
@@ -98,13 +102,16 @@ def CNN(url):
     paragraph_div = soup.find('div', class_='article__content')
 
     # Create a new article
-    cnn_article = Article()
+    cnn_article = Article('CNN')
     full_article = ''
+
+    if not paragraph_div:
+        return None
 
     # Only add information to the article class only if paragraph_div exists
     # If there are no paragraphs, the article will not be added.
     if headline and paragraph_div:
-        setattr(cnn_article, 'header', (headline.text.strip()))
+        setattr(cnn_article, 'header', headline.text.strip())
 
     if subheader and paragraph_div:
         setattr(cnn_article, 'subheader', subheader.text.strip() + '\n')
@@ -153,6 +160,9 @@ def CNN_grabber(url, text_widget):
                 if href.startswith('/'):
                     href = url + href
 
+                # Wait between 3-15 seconds to look human
+                time.sleep(random.randint(3,15))
+
                 article = CNN(href)
 
                 if article:
@@ -173,7 +183,7 @@ def fox(url):
         return None
     
     # Parse into soup as lxml
-    soup = BeautifulSoup(response.text, 'lxml')
+    # soup = BeautifulSoup(response.text, 'lxml')
 
     header_div = soup.find('div', class_='article-meta article-meta-upper')
     headline = header_div.find('h1') if header_div else None
@@ -182,9 +192,13 @@ def fox(url):
     date_span = soup.find('span', class_='article-date')
     paragraph_p = soup.find_all('p')
 
-    fox_article = Article()
+    fox_article = Article('Fox News')
     full_article = ''
 
+    # Return if missing important content
+    if not header_div or not paragraph_p:
+        return None
+    
     # Only add information to the article class only if paragraph_div exists
     # If there are no paragraphs, the article will not be added.
     if headline and paragraph_p:
@@ -245,6 +259,9 @@ def fox_grabber(url, text_widget):
                     if href.startswith('/'):
                         href = https + href
 
+                    # Wait between 3-15 seconds to look human
+                    time.sleep(random.randint(3,15))
+
                     article = fox(href)
 
                     if article:
@@ -252,18 +269,59 @@ def fox_grabber(url, text_widget):
 
     return
 
-# Define nytimes_grabber
-def npr_grabber(url, text_widget):
-    # Use headers to make it look as if program is a user and not a bot
-    header = {
-        'User-Agent': f'{user_agents[0]}',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Referer': 'http://www.google.com/',
-        'Upgrade-Insecure-Requests': '1',
-    }
+# Define npr
+def npr(url):
+    # Exception handling, return nothing if Fox freezes
+    try:
+        response = requests.get(url, header, timeout=.5)
+        soup = BeautifulSoup(response.text, 'lxml')
+    except Exception as e:
+        print(f'Error scraping fox article.')
+        return None
+    
+    # Find all information in article
+    header_div = soup.find('div', class_='storytitle')
+    headline = header_div.find('h1') if header_div else None
+    author_p = soup.find('p', class_='byline__name byline__name--block')
+    time_div = soup.find('div', class_='dateblock')
+    paragraph_div = soup.find('div', {'id': 'storytext'})
 
+    # Return if missing important content
+    if not header_div or not paragraph_div:
+        return None
+
+    npr_article = Article('NPR')
+    full_article = ''
+
+    # Find and insert all content into npr_article
+    if headline and paragraph_div:
+        setattr(npr_article, 'header', headline.text.strip())
+
+    if author_p and paragraph_div:
+        setattr(npr_article, 'author', f'{author_p.text.strip()}\n')
+
+    # Take both the date and time of the article, located in two different spans
+    if time_div and paragraph_div:
+        date_span = time_div.find('span', class_='date')
+        time_span = time_div.find('span', class_='time')
+
+        date_text = date_span.text.strip() if date_span else ''
+        time_text = date_span.text.strip() if time_span else ''
+
+        setattr(npr_article, 'time', f'{date_text}, {time_text}')
+
+    # Take the paragraph and remove any links in the text
+    if paragraph_div:
+        for paragraph in paragraph_div:
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            full_article += paragraph_text +'\n'
+        full_article += separator
+        setattr(npr_article, 'paragraphs', full_article)
+
+    return npr_article
+
+# Define npr_grabber
+def npr_grabber(url, text_widget):
     try:
         response = requests.get(url, header)
         # print(response.text)
@@ -279,14 +337,26 @@ def npr_grabber(url, text_widget):
     soup = BeautifulSoup(response.text, 'lxml')
 
     # Find all links to articles
-    links_div = soup.find('div', class_='story-text')
+    links_div = soup.find_all('div', class_='story-text')
 
-    all_articles = []
+    seen_urls = set()
 
-    for link in links_div.find_all('a', href=True):
-        href = link.get('href')
-        print(href)
+    # Search through the links_div to get each article from npr
+    if links_div:
+        for link in links_div:
+            for found_link in link.find_all('a', href=True):
+                href = found_link.get('href')
+                if href not in seen_urls and '/series' not in href and '/sections' not in href and 'npr' in href:
+                    seen_urls.add(href)
+                    
+                    # Wait between 3-15 seconds to look like human activity
+                    time.sleep(random.randint(3,15))
 
+                    article = npr(href)
+
+                    if article:
+                        update_queue.put((text_widget, article.__str__()))
+                    
     return
 
 def main():
@@ -321,7 +391,7 @@ def main():
         text = tk.Text(frame, wrap='word', bg='black', fg='white', insertbackground='white', cursor='arrow',
                        yscrollcommand=scrollbar.set, font=('Times New Roman', 15))
         text.grid(row=0, column=i, sticky='nsew', padx = 10, pady=10)
-        # text.config(state='enable')
+        text.config(state='disable')
         text_widgets.append(text)
         auto_scroll(text)
 
@@ -339,7 +409,9 @@ def main():
     threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[2],)).start()
 
-    window.after(100, update_gui, window)
+    window.after(15, update_gui, window)
+
+    time.sleep(15)
 
     # Disable configuration so user cannot type in widget
     # for widget in text_widgets:
