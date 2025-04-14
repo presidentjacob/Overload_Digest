@@ -11,6 +11,7 @@ import threading
 import queue
 import time
 import random
+import urllib.robotparser
 
 # Setup an article class to contain article information
 class Article:
@@ -78,6 +79,16 @@ def auto_scroll(text_widget):
 def scrape_and_print(function, url, widget):
         function(url, widget)
 
+def read_robots_txt(url):
+    rp = urllib.robotparser.RobotFileParser()
+    try:
+        rp.set_url(url+'/robots.txt')
+        rp.read()
+        return rp
+    except Exception as e:
+        print(f'Error reading robots.txt: {e}')
+        return None
+
 # Define CNN grabber
 def CNN(url):
     try:
@@ -142,6 +153,9 @@ def CNN_grabber(url, text_widget):
     if response.status_code != 200:
         return None
 
+    # Setup robots parser
+    rp = read_robots_txt(url)
+
     # Parse all text to lxml
     soup = BeautifulSoup(response.text, 'lxml')
     # Find all links to articles
@@ -152,13 +166,13 @@ def CNN_grabber(url, text_widget):
         for div in links_div:
             for link in div.find_all('a',href=True):
                 href = link.get('href')
-                # Improve runtime and make sure articles are not read twice
-                if (href in seen_urls or any(exclude in href for exclude in ['/podcasts', '/fashion', '/deals', '/interactive', '/video', '/bleacherreport'])):
-                    continue
-                seen_urls.add(href)
-
                 if href.startswith('/'):
                     href = url + href
+
+                # Improve runtime and make sure articles are not read twice and respect robots.txt
+                if href in seen_urls or not rp.can_fetch('*', href):
+                    continue
+                seen_urls.add(href)
 
                 # Wait between 3-15 seconds to look human
                 time.sleep(random.randint(3,15))
