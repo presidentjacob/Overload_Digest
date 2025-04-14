@@ -158,6 +158,7 @@ def CNN_grabber(url, text_widget):
 
     # Setup robots parser
     rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay('*')
 
     # Parse all text to lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -178,7 +179,7 @@ def CNN_grabber(url, text_widget):
                 seen_urls.add(href)
 
                 # Wait between 3-15 seconds to look human
-                time.sleep(random.randint(3,15))
+                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
 
                 article = CNN(href)
 
@@ -259,6 +260,7 @@ def fox_grabber(url, text_widget):
         return None
     
     rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay('*')
 
     # Parse all html text as lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -278,7 +280,7 @@ def fox_grabber(url, text_widget):
                 # Ignore anything that isn't news
                 if rp.can_fetch('*', href):
                     # Wait between 3-15 seconds to look human
-                    time.sleep(random.randint(3,15))
+                    time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
 
                     article = fox(href)
 
@@ -352,6 +354,7 @@ def npr_grabber(url, text_widget):
         return
     
     rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay('*')
 
     # Setup a readable text
     soup = BeautifulSoup(response.text, 'lxml')
@@ -368,9 +371,9 @@ def npr_grabber(url, text_widget):
                 href = found_link.get('href')
                 if href not in seen_urls and rp.can_fetch('*', href):
                     seen_urls.add(href)
-                    
+
                     # Wait between 3-15 seconds to look like human activity
-                    time.sleep(random.randint(3,15))
+                    time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
 
                     article = npr(href)
 
@@ -445,7 +448,7 @@ def main():
 
     window.after(15, update_gui, window)
 
-    time.sleep(15)
+    time.sleep(20)
 
     # Disable configuration so user cannot type in widget
     # for widget in text_widgets:
