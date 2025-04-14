@@ -12,6 +12,7 @@ import queue
 import time
 import random
 import urllib.robotparser
+from urllib.parse import urljoin
 
 # Setup an article class to contain article information
 class Article:
@@ -81,9 +82,10 @@ def scrape_and_print(function, url, widget):
 
 def read_robots_txt(url):
     rp = urllib.robotparser.RobotFileParser()
+    robots_url = urljoin(url, '/robots.txt')
     try:
         # Read robots.txt and return rp
-        rp.set_url(url+'/robots.txt')
+        rp.set_url(robots_url)
         rp.read()
         return rp
     except Exception as e:
@@ -168,7 +170,7 @@ def CNN_grabber(url, text_widget):
             for link in div.find_all('a',href=True):
                 href = link.get('href')
                 if href.startswith('/'):
-                    href = url + href
+                    href = urljoin(url, href)
 
                 # Improve runtime and make sure articles are not read twice and respect robots.txt
                 if href in seen_urls or not rp.can_fetch('*', href):
@@ -272,7 +274,7 @@ def fox_grabber(url, text_widget):
             for link in links.find_all('a', href=True):
                 href = link.get('href')
                 if href.startswith('/'):
-                        href = https + href
+                        href = urljoin(https, href)
                 # Ignore anything that isn't news
                 if rp.can_fetch('*', href):
                     # Wait between 3-15 seconds to look human
@@ -345,10 +347,12 @@ def npr_grabber(url, text_widget):
         print(f'Error: {e}')
         return None
 
-    # if response != '200':
-    #     print(f'Error: {response.status_code}')
-    #     return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return
     
+    rp = read_robots_txt(url)
+
     # Setup a readable text
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -362,7 +366,7 @@ def npr_grabber(url, text_widget):
         for link in links_div:
             for found_link in link.find_all('a', href=True):
                 href = found_link.get('href')
-                if href not in seen_urls and '/series' not in href and '/sections' not in href and 'npr' in href:
+                if href not in seen_urls and rp.can_fetch('*', href):
                     seen_urls.add(href)
                     
                     # Wait between 3-15 seconds to look like human activity
