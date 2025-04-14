@@ -82,6 +82,7 @@ def scrape_and_print(function, url, widget):
 def read_robots_txt(url):
     rp = urllib.robotparser.RobotFileParser()
     try:
+        # Read robots.txt and return rp
         rp.set_url(url+'/robots.txt')
         rp.read()
         return rp
@@ -255,6 +256,8 @@ def fox_grabber(url, text_widget):
     if response.status_code != 200:
         return None
     
+    rp = read_robots_txt(url)
+
     # Parse all html text as lxml
     soup = BeautifulSoup(response.text, 'lxml')
 
@@ -268,11 +271,10 @@ def fox_grabber(url, text_widget):
             # Find 'a' who's href is true
             for link in links.find_all('a', href=True):
                 href = link.get('href')
-                # Ignore anything that isn't news
-                if (any(site in href for site in ['foxnews', 'foxbusiness', 'foxweather']) and not '/video' in href and not '/radio' in href):
-                    if href.startswith('/'):
+                if href.startswith('/'):
                         href = https + href
-
+                # Ignore anything that isn't news
+                if rp.can_fetch('*', href):
                     # Wait between 3-15 seconds to look human
                     time.sleep(random.randint(3,15))
 
