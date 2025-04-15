@@ -1,5 +1,4 @@
 import requests
-import validators
 import textwrap
 import tkinter as tk
 from tkinter import ttk
@@ -383,11 +382,40 @@ def npr_grabber(url, text_widget):
     return
 
 def techcrunch_grabber(url, text_widget):
+    # Try to get a response from techcrunch
     try:
         response = requests.get(url, timeout=10)
     except Exception as e:
         print(f'Error: {e}')
         return None
+
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    # Get information from read robots
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay('*')
+
+    # Setup readable text
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all links to articls
+    links_div = soup.find_all('div', class_='loop-card__content')
+    seen_urls = set()
+
+    if links_div:
+        for link in links_div:
+            found_h3 = link.find('h3', class_='loop-card__title')
+            found_a = found_h3.find('a', href=True)
+            # Some have a 'nonetype' and will throw an error 
+            try:
+                href = found_a.get('href')
+            except Exception as e:
+                print(f'Error: {e}')
+                continue
+
+
 
 def main():
     # Political News
@@ -451,6 +479,8 @@ def main():
     # CNN_grabber(cnn_url, text_widgets[0])
     # fox_grabber(fox_url, text_widgets[1])
     # npr_grabber(npr_url, text_widgets[2])
+
+    techcrunch_grabber(techcrunch_url, text_widgets[1])
 
     # Run threads to update per each article scraped.
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
