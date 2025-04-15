@@ -381,6 +381,51 @@ def npr_grabber(url, text_widget):
                     
     return
 
+def techcrunch(url):
+    try:
+        response = requests.get(url, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+    
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    # Create soup
+    soup = BeautifulSoup(response.text, 'lxml')
+    
+    # Find all information in article
+    headline = soup.find('h1', class_='article-hero__title wp-block-post-title')
+    author_a = soup.find('a', class_='wp-block-tc23-author-card-name__link')
+    time_time = soup.find('time', class_='datetime')
+    paragraphs_p = soup.find_all('p', class_='wp-block-paragraph')
+
+    if not headline or not paragraphs_p:
+        return None
+
+    techcrunch_article = Article('NPR')
+    full_article = ''
+
+    if headline:
+        setattr(techcrunch_article, 'header', (headline.text.strip()))
+    
+    if author_a:
+        setattr(techcrunch_article, 'author', author_a.text.strip())
+
+    if time_time:
+        setattr(techcrunch_article, 'time', time_time.text.strip())
+
+    if paragraphs_p:
+        for paragraphs in paragraphs_p:
+            paragraph_text = paragraphs.get_text(separator=' ', strip=True)
+            full_article += paragraph_text +'\n'
+        full_article += separator
+        setattr(techcrunch_article, 'paragraphs', full_article)
+
+    return techcrunch_article
+
+
 def techcrunch_grabber(url, text_widget):
     # Try to get a response from techcrunch
     try:
@@ -418,10 +463,11 @@ def techcrunch_grabber(url, text_widget):
             if href not in seen_urls and rp.can_fetch('*', href):
                 seen_urls.add(href)
                 time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
-                # article = techcrunch(href)
 
-                # if article:
-                #     update_queue((text_widget, article.__str__()))
+                article = techcrunch(href)
+
+                if article:
+                    update_queue((text_widget, article.__str__()))
 
 
 
