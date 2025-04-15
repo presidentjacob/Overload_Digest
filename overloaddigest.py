@@ -351,7 +351,7 @@ def npr_grabber(url, text_widget):
 
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
-        return
+        return None
     
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay('*')
@@ -382,10 +382,21 @@ def npr_grabber(url, text_widget):
                     
     return
 
+def techcrunch_grabber(url, text_widget):
+    try:
+        response = requests.get(url, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+
 def main():
+    # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
+
+    # Tech News
+    techcrunch_url = 'https://techcrunch.com'
 
     # Create main window
     window = tk.Tk()
@@ -443,8 +454,8 @@ def main():
 
     # Run threads to update per each article scraped.
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
-    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[1],)).start()
-    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[2],)).start()
+    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
 
     window.after(15, update_gui, window)
 
