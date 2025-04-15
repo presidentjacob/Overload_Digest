@@ -466,8 +466,8 @@ def techcrunch_grabber(url, text_widget):
 
                 article = techcrunch(href)
 
-                if article:
-                    update_queue((text_widget, article.__str__()))
+            if article:
+                update_queue((text_widget, article.__str__()))
 
 
 
