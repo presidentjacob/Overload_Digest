@@ -415,6 +415,14 @@ def techcrunch_grabber(url, text_widget):
                 print(f'Error: {e}')
                 continue
 
+            if href not in seen_urls and rp.can_fetch('*', href):
+                seen_urls.add(href)
+                time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
+                # article = techcrunch(href)
+
+                # if article:
+                #     update_queue((text_widget, article.__str__()))
+
 
 
 def main():
