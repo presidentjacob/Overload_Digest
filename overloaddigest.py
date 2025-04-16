@@ -23,7 +23,7 @@ class Article:
         self.time = ''
         self.paragraphs = ''
     def __str__(self):
-        return f'\n\t\t\t\t{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
 
 # Use headers to make it look as if program is a user and not a bot
 header = {
@@ -404,7 +404,7 @@ def techcrunch(url):
     if not headline or not paragraphs_p:
         return None
 
-    techcrunch_article = Article('NPR')
+    techcrunch_article = Article('TECHCRUNCH')
     full_article = ''
 
     if headline:
@@ -419,7 +419,7 @@ def techcrunch(url):
     if paragraphs_p:
         for paragraphs in paragraphs_p:
             paragraph_text = paragraphs.get_text(separator=' ', strip=True)
-            full_article += paragraph_text +'\n'
+            full_article += paragraph_text + '\n\n'
         full_article += separator
         setattr(techcrunch_article, 'paragraphs', full_article)
 
@@ -467,7 +467,7 @@ def techcrunch_grabber(url, text_widget):
                 article = techcrunch(href)
 
             if article:
-                update_queue((text_widget, article.__str__()))
+                update_queue.put((text_widget, article.__str__()))
 
 
 
@@ -534,12 +534,12 @@ def main():
     # fox_grabber(fox_url, text_widgets[1])
     # npr_grabber(npr_url, text_widgets[2])
 
-    techcrunch_grabber(techcrunch_url, text_widgets[1])
-
     # Run threads to update per each article scraped.
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
+
+    threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
 
     window.after(15, update_gui, window)
 
