@@ -471,6 +471,20 @@ def techcrunch_grabber(url, text_widget):
     
     return
 
+def four_media(url):
+    try:
+        response = requests.get(url, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+    
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    # Create soup
+    soup = BeautifulSoup(response.text, 'lxml')
+
 def four_media_grabber(url, text_widget):
     # Try to get a response from techcrunch
     try:
@@ -508,8 +522,17 @@ def four_media_grabber(url, text_widget):
 
             if href.startswith('/'):
                 href = urljoin(url, href)
-            print(href)
 
+            if href not in seen_urls and rp.can_fetch('*', href):
+                seen_urls.add(href)
+                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
+
+                article = four_media(href)
+
+            if article:
+                update_queue.put((text_widget, article.__str__()))
+
+    return
             
 
 def main():
