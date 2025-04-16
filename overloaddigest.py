@@ -481,8 +481,28 @@ def four_media_grabber(url, text_widget):
         print(f'Error: {response.status_code}')
         return None
     
+    # Read the robots.txt file
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay('*')
+
+    # Create soup
+    soup = BeautifulSoup(response.text, 'lxml')
+    
+    # Find all links
+    links_div = soup.find_all('div', class_='post-card__content')
+    seen_urls = set()
+
+    # Check for links
+    if links_div:
+        for link in links_div:
+            found_h4 = link.find('h4', class_='post-card__title')
+            # Exception handling for href
+            try:
+                href = found_h4.get('href')
+            except Exception as e:
+                print(f'Error: {e}')
+                continue
+            
 
 def main():
     # Political News
