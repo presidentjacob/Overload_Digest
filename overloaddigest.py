@@ -468,6 +468,8 @@ def techcrunch_grabber(url, text_widget):
 
             if article:
                 update_queue.put((text_widget, article.__str__()))
+    
+    return
 
 def four_media_grabber(url, text_widget):
     # Try to get a response from techcrunch
@@ -496,12 +498,18 @@ def four_media_grabber(url, text_widget):
     if links_div:
         for link in links_div:
             found_h4 = link.find('h4', class_='post-card__title')
+            found_a = found_h4.find('a', href=True)
             # Exception handling for href
             try:
-                href = found_h4.get('href')
+                href = found_a.get('href')
             except Exception as e:
                 print(f'Error: {e}')
                 continue
+
+            if href.startswith('/'):
+                href = urljoin(url, href)
+            print(href)
+
             
 
 def main():
@@ -574,6 +582,7 @@ def main():
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
 
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
 
     window.after(15, update_gui, window)
 
