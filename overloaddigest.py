@@ -469,7 +469,20 @@ def techcrunch_grabber(url, text_widget):
             if article:
                 update_queue.put((text_widget, article.__str__()))
 
+def four_media_grabber(url, text_widget):
+    # Try to get a response from techcrunch
+    try:
+        response = requests.get(url, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
 
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay('*')
 
 def main():
     # Political News
@@ -479,6 +492,7 @@ def main():
 
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
+    four_zero_four_media_url = 'https://www.404media.co'
 
     # Create main window
     window = tk.Tk()
