@@ -486,11 +486,14 @@ def four_media(url):
     soup = BeautifulSoup(response.text, 'lxml')
 
     headline = soup.find('h1', class_='post-hero__title').text
+
+    # Try to find a subheadline
     try:
         subheadline = soup.find('div', class_='post-hero__excerpt').text
     except Exception:
         print(f'No subheader found')
     
+    # Find the exact time text
     time = soup.find('time', class_='byline__date').text
 
     authors_byline = soup.find('div', class_='byline__author')
@@ -505,10 +508,12 @@ def four_media(url):
     if time:
         setattr(four_article, 'time', time.strip().replace('\n', '') + '\n')
 
+    # Get every author
     if authors_byline:
         authors = [authors.text.strip() for authors in authors_byline.find_all('span')]
         setattr(four_article, 'author', ', '.join(authors) + '\n')
 
+    # Get every paragraph
     if paragraphs_div:
         paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_div.find_all('p')]
         setattr(four_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
