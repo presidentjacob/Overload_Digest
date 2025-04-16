@@ -12,6 +12,7 @@ import time
 import random
 import urllib.robotparser
 from urllib.parse import urljoin
+import re
 
 # Setup an article class to contain article information
 class Article:
@@ -506,7 +507,8 @@ def four_media(url):
     if subheadline:
         setattr(four_article, 'subheader', subheadline.strip() + '\n')
     if time:
-        setattr(four_article, 'time', time.strip().replace('\n', '') + '\n')
+        # Use regex to replace multiple spaces with just one space, then strip spaces at front
+        setattr(four_article, 'time', re.sub(r'\s+', ' ', time).strip() + '\n')
 
     # Get every author
     if authors_byline:
