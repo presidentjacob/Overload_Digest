@@ -485,6 +485,37 @@ def four_media(url):
     # Create soup
     soup = BeautifulSoup(response.text, 'lxml')
 
+    headline = soup.find('h1', class_='post-hero__title').text
+    try:
+        subheadline = soup.find('div', class_='post-hero__excerpt').text
+    except Exception:
+        print(f'No subheader found')
+    
+    time = soup.find('time', class_='byline__date').text
+
+    authors_byline = soup.find('div', class_='byline__author')
+    paragraphs_div = soup.find('div', class_='post__content no-overflow')
+
+    four_article = Article('404 MEDIA')
+
+    if headline:
+        setattr(four_article, 'header', headline.strip() + '\n')
+    if subheadline:
+        setattr(four_article, 'subheader', subheadline.strip() + '\n')
+    if time:
+        setattr(four_article, 'time', time.strip().replace('\n', '') + '\n')
+
+    if authors_byline:
+        authors = [authors.text.strip() for authors in authors_byline.find_all('span')]
+        setattr(four_article, 'author', ', '.join(authors) + '\n')
+
+    if paragraphs_div:
+        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_div.find_all('p')]
+        setattr(four_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+
+    return four_article
+
+
 def four_media_grabber(url, text_widget):
     # Try to get a response from techcrunch
     try:
