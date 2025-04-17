@@ -583,15 +583,13 @@ def four_media_grabber(url, text_widget):
 
             if href not in seen_urls and rp.can_fetch('*', href):
                 seen_urls.add(href)
-                time.sleep(.1)
+                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
 
                 article = four_media(href)
 
             if article:
                 update_queue.put((text_widget, article.__str__()))
 
-            print(href)
-    print('done')
     return
             
 
