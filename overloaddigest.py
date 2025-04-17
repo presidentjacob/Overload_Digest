@@ -13,6 +13,8 @@ import random
 import urllib.robotparser
 from urllib.parse import urljoin
 import re
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 # Setup an article class to contain article information
 class Article:
@@ -539,8 +541,26 @@ def four_media_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay('*')
 
+    # Use Selenium to click more articles
+    driver_options = webdriver.ChromeOptions()
+    driver_options.add_argument('--headless')
+    driver = webdriver.Chrome(options=driver_options)
+    driver.get(url)
+    time.sleep(1) 
+
+    # Click the button to load more articles
+    try:
+        button = driver.find_element(By.ID, 'load-more-posts')
+        button.click()
+        time.sleep(1)  # Wait for the articles to load
+    except Exception as e:
+        print(f'Error: {e}')
+        driver.quit()
+        return None
+
     # Create soup
     soup = BeautifulSoup(response.text, 'lxml')
+    driver.quit()
     
     # Find all links
     links_div = soup.find_all('div', class_='post-card__content')
@@ -563,13 +583,15 @@ def four_media_grabber(url, text_widget):
 
             if href not in seen_urls and rp.can_fetch('*', href):
                 seen_urls.add(href)
-                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
+                time.sleep(.1)
 
                 article = four_media(href)
 
             if article:
                 update_queue.put((text_widget, article.__str__()))
 
+            print(href)
+    print('done')
     return
             
 
