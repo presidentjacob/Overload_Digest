@@ -170,23 +170,22 @@ def CNN_grabber(url, text_widget):
     seen_urls = set()
     if links_div:
         for div in links_div:
-            for link in div.find_all('a',href=True):
+            for link in div.find_all('a', href=True):
                 href = link.get('href')
                 if href.startswith('/'):
                     href = urljoin(url, href)
 
                 # Improve runtime and make sure articles are not read twice and respect robots.txt
-                if href in seen_urls or not rp.can_fetch('*', href):
-                    continue
-                seen_urls.add(href)
+                if href not in seen_urls or rp.can_fetch('*', href):
+                    seen_urls.add(href)
 
-                # Wait between 3-15 seconds to look human
-                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
+                    # Wait between 3-15 seconds to look human
+                    time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
 
-                article = CNN(href)
+                    article = CNN(href)
 
-                if article:
-                    update_queue.put((text_widget, article.__str__()))
+                    if article:
+                        update_queue.put((text_widget, article.__str__()))
 
     return
 
