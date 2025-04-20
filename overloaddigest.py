@@ -15,6 +15,9 @@ from urllib.parse import urljoin
 import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Setup an article class to contain article information
 class Article:
@@ -498,7 +501,7 @@ def four_media(url):
     # Find the exact time text
     time = soup.find('time', class_='byline__date').text
 
-    authors_byline = soup.find('div', class_='byline__author')
+    authors_byline = soup.find('div', class_='byline')
     paragraphs_div = soup.find('div', class_='post__content no-overflow')
 
     four_article = Article('404 MEDIA')
@@ -514,7 +517,9 @@ def four_media(url):
     # Get every author
     if authors_byline:
         authors = [authors.text.strip() for authors in authors_byline.find_all('span')]
-        setattr(four_article, 'author', ', '.join(authors) + '\n')
+        all_authors = ', '.join(authors)
+        all_authors = all_authors.replace(',,', '').replace('·', '').strip().rstrip(',') + '\n'
+        setattr(four_article, 'author', all_authors)
 
     # Get every paragraph
     if paragraphs_div:
@@ -545,13 +550,17 @@ def four_media_grabber(url, text_widget):
     driver_options.add_argument('--headless')
     driver = webdriver.Chrome(options=driver_options)
     driver.get(url)
-    time.sleep(1) 
+    
+    wait = WebDriverWait(driver, 5)
+    button = wait.until(EC.element_to_be_clickable((By.ID, 'load-more-posts')))
+
+    actions = ActionChains(driver)
+    actions.move_to_element(button).perform()
 
     # Click the button to load more articles
     try:
-        button = driver.find_element(By.ID, 'load-more-posts')
         button.click()
-        time.sleep(1)  # Wait for the articles to load
+        time.sleep(2)# Wait for the articles to load
     except Exception as e:
         print(f'Error: {e}')
         driver.quit()
