@@ -18,6 +18,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 # Setup an article class to contain article information
 class Article:
@@ -568,7 +569,9 @@ def four_media_grabber(url, text_widget):
         return None
 
     # Create soup
-    soup = BeautifulSoup(response.text, 'lxml')
+    html = driver.page_source
+
+    soup = BeautifulSoup(html, 'lxml')
     driver.quit()
     
     # Find all links
@@ -616,7 +619,39 @@ def wired(url):
     
     soup = BeautifulSoup(response.text, 'lxml')
 
-    # Long class title for whatever reason
+    wired_article = Article('WIRED')
+    full_article = ''
+
+    # Find the headline information using regex as wired uses random classnames
+    headline_h1 = soup.find('h1', class_=re.compile(r'BaseWrap.*'))
+    subheader_div = soup.find('div', class_=re.compile(r'BaseWrap.*'))
+    time = soup.find('time', class_=re.compile(r'SplitScreenContentHeaderPublishDate.*'))
+    author_span = soup.find_all('span', class_=re.compile(r'BylineName.*byline__name'))
+    paragraphs_div = soup.find('div', class_='body__inner-container')
+
+    if headline_h1:
+        headline = headline_h1.text.strip()
+        setattr(wired_article, 'header', headline + '\n')
+    
+    if subheader_div:
+        subheader = subheader_div.text.strip()
+        setattr(wired_article, 'subheader', subheader + '\n')
+    
+    if time:
+        time = time.text.strip()
+        setattr(wired_article, 'time', time + '\n')
+
+    if author_span:
+        authors = [authors.text.strip() for authors in author_span]
+        all_authors = ', '.join(authors)
+        # all_authors = all_authors.replace(',,', '').replace('·', '').strip().rstrip(',') + '\n'
+        setattr(wired_article, 'author', all_authors)
+
+    if paragraphs_div:
+        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_div.find_all('p')]
+        setattr(wired_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+
+    return wired_article
 
 
 def wired_grabber(url, text_widget):
@@ -635,16 +670,29 @@ def wired_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
+    # Use Selenium to get information in the article that's dynamically loaded
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('user-agent={}'.format(header['User-Agent']))
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+    time.sleep(10)
+
+    html = driver.page_source
+
     # Create a soup from response
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
 
     # Find all links to articles
-    links_div = soup.find_all('div', class_='SummaryItemContent-eiDYMl dogWHS summary-item__content')
+    links_div = soup.find_all('div', class_=re.compile(r'SummaryItemContent.*summary-item__content'))
+    driver.quit()
     seen_urls = set()
-
     # If links exist
     if links_div:
+        print('links exists')
         for link in links_div:
+            print(link)
             # Get the link
             if link.find('a', href=True).get('href'):
                 href = link.find('a', href=True).get('href')
@@ -663,7 +711,6 @@ def wired_grabber(url, text_widget):
                 
                 if article:
                     update_queue.put((text_widget, article.__str__()))
-
     return
 
 def main():
@@ -737,6 +784,7 @@ def main():
 
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(wired_grabber, techcrunch_url, text_widgets[1],)).start()
 
     window.after(15, update_gui, window)
 
