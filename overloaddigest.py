@@ -601,6 +601,24 @@ def four_media_grabber(url, text_widget):
 
     return
 
+def wired(url):
+    # Try to get the url, if it fails, return None
+    try:
+        response = requests.get(url, headers=header, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+    
+    # Get and check the status code
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Long class title for whatever reason
+
+
 def wired_grabber(url, text_widget):
     # Get a response from wired
     try:
@@ -608,6 +626,45 @@ def wired_grabber(url, text_widget):
     except Exception as e:
         print(f'Error: {e}')
         return None
+
+    # If response status code is not 200, return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
+
+    # Create a soup from response
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all links to articles
+    links_div = soup.find_all('div', class_='SummaryItemContent-eiDYMl dogWHS summary-item__content')
+    seen_urls = set()
+
+    # If links exist
+    if links_div:
+        for link in links_div:
+            # Get the link
+            if link.find('a', href=True).get('href'):
+                href = link.find('a', href=True).get('href')
+                if href.startswith('/'):
+                    href = urljoin(url, href)
+            else:
+                continue
+
+            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
+                seen_urls.add(href)
+
+                # Wait between 3-15 seconds to look human
+                time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
+
+                article = wired(href)
+                
+                if article:
+                    update_queue.put((text_widget, article.__str__()))
+
+    return
 
 def main():
     # Political News
