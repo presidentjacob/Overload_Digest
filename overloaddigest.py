@@ -600,7 +600,14 @@ def four_media_grabber(url, text_widget):
                 update_queue.put((text_widget, article.__str__()))
 
     return
-            
+
+def wired_grabber(url, text_widget):
+    # Get a response from wired
+    try:
+        response = requests.get(url, headers=header, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
 
 def main():
     # Political News
