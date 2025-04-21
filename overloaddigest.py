@@ -100,7 +100,7 @@ def read_robots_txt(url):
 # Define CNN grabber
 def CNN(url):
     try:
-        response = requests.get(url, timeout=.5)
+        response = requests.get(url, headers=header,timeout=10)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
         print(f'Error scraping CNN article.')
@@ -155,7 +155,7 @@ def CNN(url):
 
 # Define a grabber for CNN.com
 def CNN_grabber(url, text_widget):
-    response = requests.get(url)
+    response = requests.get(url, headers=header, timeout=10)
 
     # if no response return
     if response.status_code != 200:
@@ -163,7 +163,7 @@ def CNN_grabber(url, text_widget):
 
     # Setup robots parser
     rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay('*')
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Parse all text to lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -179,7 +179,7 @@ def CNN_grabber(url, text_widget):
                     href = urljoin(url, href)
 
                 # Improve runtime and make sure articles are not read twice and respect robots.txt
-                if href not in seen_urls or rp.can_fetch('*', href):
+                if href not in seen_urls or rp.can_fetch(header['User-Agent'], href):
                     seen_urls.add(href)
 
                     # Wait between 3-15 seconds to look human
@@ -195,7 +195,7 @@ def CNN_grabber(url, text_widget):
 def fox(url):
     # Exception handling, return nothing if Fox freezes
     try:
-        response = requests.get(url, timeout=.5)
+        response = requests.get(url, headers=header, timeout=10)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
         print(f'Error scraping fox article.')
@@ -256,7 +256,7 @@ def fox(url):
 
 # Define fox_grabber
 def fox_grabber(url, text_widget):
-    response = requests.get(url)
+    response = requests.get(url, headers=header, timeout=10)
     https = 'https:'
 
     # If no response return
@@ -264,7 +264,7 @@ def fox_grabber(url, text_widget):
         return None
     
     rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay('*')
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Parse all html text as lxml
     soup = BeautifulSoup(response.text, 'lxml')
@@ -282,7 +282,7 @@ def fox_grabber(url, text_widget):
                 if href.startswith('/'):
                         href = urljoin(https, href)
                 # Ignore anything that isn't news
-                if rp.can_fetch('*', href):
+                if rp.can_fetch(header['User-Agent'], href):
                     # Wait between 3-15 seconds to look human
                     time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
 
@@ -297,7 +297,7 @@ def fox_grabber(url, text_widget):
 def npr(url):
     # Exception handling, return nothing if Fox freezes
     try:
-        response = requests.get(url, header, timeout=.5)
+        response = requests.get(url, headers=header, timeout=10)
         soup = BeautifulSoup(response.text, 'lxml')
     except Exception as e:
         print(f'Error scraping fox article.')
@@ -347,7 +347,7 @@ def npr(url):
 # Define npr_grabber
 def npr_grabber(url, text_widget):
     try:
-        response = requests.get(url, header)
+        response = requests.get(url, headers=header, timeout=10)
         # print(response.text)
     except Exception as e:
         print(f'Error: {e}')
@@ -358,7 +358,7 @@ def npr_grabber(url, text_widget):
         return None
     
     rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay('*')
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Setup a readable text
     soup = BeautifulSoup(response.text, 'lxml')
@@ -373,7 +373,7 @@ def npr_grabber(url, text_widget):
         for link in links_div:
             for found_link in link.find_all('a', href=True):
                 href = found_link.get('href')
-                if href not in seen_urls and rp.can_fetch('*', href):
+                if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
                     seen_urls.add(href)
 
                     # Wait between 3-15 seconds to look like human activity
@@ -445,7 +445,7 @@ def techcrunch_grabber(url, text_widget):
     
     # Get information from read robots
     rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay('*')
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Setup readable text
     soup = BeautifulSoup(response.text, 'lxml')
@@ -465,7 +465,7 @@ def techcrunch_grabber(url, text_widget):
                 print(f'Error: {e}')
                 continue
 
-            if href not in seen_urls and rp.can_fetch('*', href):
+            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
                 seen_urls.add(href)
                 time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
 
@@ -478,7 +478,7 @@ def techcrunch_grabber(url, text_widget):
 
 def four_media(url):
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=header, timeout=10)
     except Exception as e:
         print(f'Error: {e}')
         return None
@@ -532,7 +532,7 @@ def four_media(url):
 def four_media_grabber(url, text_widget):
     # Try to get a response from techcrunch
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=header, timeout=10)
     except Exception as e:
         print(f'Error: {e}')
         return None
@@ -543,9 +543,10 @@ def four_media_grabber(url, text_widget):
     
     # Read the robots.txt file
     rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay('*')
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Use Selenium to click more articles
+    # THIS DOESNT FUCKING WORK
     driver_options = webdriver.ChromeOptions()
     driver_options.add_argument('--headless')
     driver = webdriver.Chrome(options=driver_options)
@@ -560,7 +561,7 @@ def four_media_grabber(url, text_widget):
     # Click the button to load more articles
     try:
         button.click()
-        time.sleep(2)# Wait for the articles to load
+        time.sleep(2)
     except Exception as e:
         print(f'Error: {e}')
         driver.quit()
@@ -589,7 +590,7 @@ def four_media_grabber(url, text_widget):
             if href.startswith('/'):
                 href = urljoin(url, href)
 
-            if href not in seen_urls and rp.can_fetch('*', href):
+            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
                 seen_urls.add(href)
                 time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
 
