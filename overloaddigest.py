@@ -617,10 +617,28 @@ def wired(url):
         print(f'Error: {response.status_code}')
         return None
     
-    soup = BeautifulSoup(response.text, 'lxml')
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('user-agent={}'.format(header['User-Agent']))
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+    
+    try:
+        WebDriverWait(driver, 10)
+    except Exception as e:
+        print(f'Error waiting for page to load: {e}')
+        driver.quit()
+        return None
+
+    html = driver.page_source
+
+    # Create a soup from response
+    soup = BeautifulSoup(html, 'lxml')
+
+    driver.quit()
 
     wired_article = Article('WIRED')
-    full_article = ''
 
     # Find the headline information using regex as wired uses random classnames
     headline_h1 = soup.find('h1', class_=re.compile(r'BaseWrap.*'))
@@ -677,7 +695,7 @@ def wired_grabber(url, text_widget):
     options.add_argument('user-agent={}'.format(header['User-Agent']))
     driver = webdriver.Chrome(options=options)
     driver.get(url)
-    time.sleep(10)
+    time.sleep(5)
 
     html = driver.page_source
 
@@ -690,9 +708,7 @@ def wired_grabber(url, text_widget):
     seen_urls = set()
     # If links exist
     if links_div:
-        print('links exists')
         for link in links_div:
-            print(link)
             # Get the link
             if link.find('a', href=True).get('href'):
                 href = link.find('a', href=True).get('href')
@@ -722,6 +738,7 @@ def main():
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
     four_zero_four_media_url = 'https://www.404media.co'
+    wired_url = 'https://www.wired.com'
 
     # Create main window
     window = tk.Tk()
@@ -784,7 +801,7 @@ def main():
 
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
-    threading.Thread(target=scrape_and_print, args=(wired_grabber, techcrunch_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
 
     window.after(15, update_gui, window)
 
