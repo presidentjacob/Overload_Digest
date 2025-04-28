@@ -729,11 +729,57 @@ def wired_grabber(url, text_widget):
                     update_queue.put((text_widget, article.__str__()))
     return
 
+def ap_grabber(url, text_widget):
+    try:
+        response = requests.get(url, headers=header, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+    
+    # Return if response does not equal 200
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    # Get the soup from the response
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all links to articles
+    links_a = soup.find_all('a', href=True)
+    seen_urls = set()
+
+    # If links exist
+    if links_a:
+        for link in links_a:
+            # Get the link
+            try:
+                href = link.get('href')
+            except Exception as e:
+                print(f'Error: {e}')
+                continue
+            
+            if href.startswith('/'):
+                href = urljoin(url, href)
+
+            # If the link is not in seen_urls and can be fetched, add it to seen_urls
+            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
+                seen_urls.add(href)
+
+                # Wait between 3-15 seconds to look human
+                time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
+
+                article = ap(href)
+
+                if article:
+                    update_queue.put((text_widget, article.__str__()))
+
+
 def main():
     # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
+    ap_url = 'https://apnews.com'
 
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
