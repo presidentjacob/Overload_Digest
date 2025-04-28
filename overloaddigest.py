@@ -729,7 +729,53 @@ def wired_grabber(url, text_widget):
                     update_queue.put((text_widget, article.__str__()))
     return
 
+def ap(url):
+    try:
+        response = requests.get(url, headers=header, timeout=10)
+    except Exception as e:
+        print(f'Error: {e}')
+        return None
+    
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    soup = BeautifulSoup(response.text, 'lxml')
+    ap_article = Article('ASSOCIATIVE PRESS NEWS')
+
+    headline_h1 = soup.find('h1', class_='Page-headline')
+    authors_div = soup.find('div', class_='Page-authors')
+    time_div = soup.find('div', class_='Page-dateModified')
+    paragraphs_div = soup.find('div', class_='RichTextStoryBody RichTextBody')
+
+
+    if not headline_h1 or not paragraphs_div:
+        return None
+    
+    headline = headline_h1.text.strip()
+    setattr(ap_article, 'header', headline + '\n')
+    
+    if authors_div:
+        authors = [authors.text.strip() for authors in authors_div.find_all('a')]
+        all_authors = ', '.join(authors)
+        setattr(ap_article, 'author', all_authors + '\n')
+
+    if time_div:
+        time = time_div.text.strip()
+        setattr(ap_article, 'time', time + '\n')
+    
+    paragraphs_div = paragraphs_div.find_all('p')
+    for paragraphs in paragraphs_div:
+        paragraph_text = paragraphs.get_text(separator=' ', strip=True)
+        if 'AP' not in paragraph_text:
+            formatted_paragraph = paragraph_text
+            setattr(ap_article, 'paragraphs', formatted_paragraph + '\n\n')
+
+    return ap_article
+
+
 def ap_grabber(url, text_widget):
+    print('grabbing AP')
     try:
         response = requests.get(url, headers=header, timeout=10)
     except Exception as e:
@@ -740,24 +786,28 @@ def ap_grabber(url, text_widget):
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
         return None
-    
+
     # Get the soup from the response
     soup = BeautifulSoup(response.text, 'lxml')
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Find all links to articles
-    links_a = soup.find_all('a', href=True)
+    links_a = soup.find_all('h3', class_='PagePromo-title')
     seen_urls = set()
 
     # If links exist
     if links_a:
+        print('found links')
         for link in links_a:
+            print('in loop')
             # Get the link
             try:
                 href = link.get('href')
             except Exception as e:
                 print(f'Error: {e}')
                 continue
-            
+
             if href.startswith('/'):
                 href = urljoin(url, href)
 
@@ -844,6 +894,8 @@ def main():
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
+
+    threading.Thread(target=scrape_and_print, args=(ap_grabber, ap_url, text_widgets[2],)).start()
 
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
