@@ -1,10 +1,7 @@
 import requests
 import textwrap
 import tkinter as tk
-from tkinter import ttk
-from tkinter import scrolledtext
-import tkinter.font as font
-from tkinter import Label
+from tkinter import ttk, scrolledtext, font, Label
 from bs4 import BeautifulSoup
 import threading
 import queue
@@ -31,6 +28,7 @@ class Article:
         self.paragraphs = ''
     def __str__(self):
         return f'\n{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+
 
 # Use headers to make it look as if program is a user and not a bot
 header = {
@@ -775,7 +773,6 @@ def ap(url):
 
 
 def ap_grabber(url, text_widget):
-    print('grabbing AP')
     try:
         response = requests.get(url, headers=header, timeout=10)
     except Exception as e:
@@ -788,6 +785,7 @@ def ap_grabber(url, text_widget):
         return None
 
     # Get the soup from the response
+    time.sleep(5)
     soup = BeautifulSoup(response.text, 'lxml')
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
