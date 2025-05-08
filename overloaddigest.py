@@ -109,6 +109,7 @@ def CNN(url):
     response = get_response(url)
     
     if response.status_code != 200:
+        print(f'Error: {response.status_code}')
         return None
 
     # Parse into soup as lxml
@@ -127,6 +128,7 @@ def CNN(url):
     full_article = ''
 
     if not paragraph_div:
+        print('No paragraphs found')
         return None
 
     # Only add information to the article class only if paragraph_div exists
@@ -153,6 +155,9 @@ def CNN(url):
         full_article += separator
         setattr(cnn_article, 'paragraphs', full_article)
 
+    print('article:')
+    print(cnn_article.__str__())
+
     return cnn_article
 
 # Define a grabber for CNN.com
@@ -167,30 +172,44 @@ def CNN_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
+    driver_options = webdriver.ChromeOptions()
+    driver_options.add_argument('--headless')
+    driver = webdriver.Chrome(options=driver_options)
+    driver.get(url)
+    
+    WebDriverWait(driver, 2)
+
+    html = driver.page_source
+
     # Parse all text to lxml
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
     # Find all links to articles
-    links_div = soup.find_all('div', class_=('container__field-links'))
+    links_div = soup.find_all('div', class_=(re.compile(r'container__field-links*')))
 
     seen_urls = set()
     if links_div:
         for div in links_div:
-            for link in div.find_all('a', href=True):
-                href = link.get('href')
-                if href.startswith('/'):
-                    href = urljoin(url, href)
+            try:
+                found_link = div.find('a', href=True)
+            except Exception as e:
+                print(f'Error: {e}')
+                continue
+            
+            href = found_link.get('href')
+            if href.startswith('/'):
+                href = urljoin(url, href)
 
-                # Improve runtime and make sure articles are not read twice and respect robots.txt
-                if href not in seen_urls or rp.can_fetch(header['User-Agent'], href):
-                    seen_urls.add(href)
+            # Improve runtime and make sure articles are not read twice and respect robots.txt
+            if href not in seen_urls or rp.can_fetch(header['User-Agent'], href):
+                seen_urls.add(href)
+                print(href)
 
-                    # Wait between 3-15 seconds to look human
-                    time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
+                # Wait between 3-15 seconds to look human
+                time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
+                article = CNN(href)
 
-                    article = CNN(href)
-
-                    if article:
-                        update_queue.put((text_widget, article.__str__()))
+                if article:
+                    update_queue.put((text_widget, article.__str__()))
 
     return
 
