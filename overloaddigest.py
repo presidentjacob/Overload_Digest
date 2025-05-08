@@ -46,6 +46,14 @@ separator = '-' * 77
 # Setup queue for each article to be scraped
 update_queue = queue.Queue()
 
+def get_response(url):
+    try:
+        response = requests.get(url, headers=header, timeout=10)
+        return response
+    except requests.exceptions.RequestException as e:
+        print(f'Error: {e}')
+        return None
+
 # Update the gui, and recursively update
 def update_gui(window):
     try:
@@ -98,12 +106,7 @@ def read_robots_txt(url):
 
 # Define CNN grabber
 def CNN(url):
-    try:
-        response = requests.get(url, headers=header,timeout=10)
-        soup = BeautifulSoup(response.text, 'lxml')
-    except Exception as e:
-        print(f'Error scraping CNN article.')
-        return None
+    response = get_response(url)
     
     if response.status_code != 200:
         return None
@@ -154,7 +157,7 @@ def CNN(url):
 
 # Define a grabber for CNN.com
 def CNN_grabber(url, text_widget):
-    response = requests.get(url, headers=header, timeout=10)
+    response = get_response(url)
 
     # if no response return
     if response.status_code != 200:
@@ -193,16 +196,12 @@ def CNN_grabber(url, text_widget):
 
 def fox(url):
     # Exception handling, return nothing if Fox freezes
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-        soup = BeautifulSoup(response.text, 'lxml')
-    except Exception as e:
-        print(f'Error scraping fox article.')
-        return None
+    response = get_response(url)
     
     if response.status_code != 200:
         return None
-    
+
+    soup = BeautifulSoup(response.text, 'lxml')    
     # Parse into soup as lxml
     # soup = BeautifulSoup(response.text, 'lxml')
 
@@ -255,7 +254,7 @@ def fox(url):
 
 # Define fox_grabber
 def fox_grabber(url, text_widget):
-    response = requests.get(url, headers=header, timeout=10)
+    response = get_response(url)
     https = 'https:'
 
     # If no response return
@@ -295,12 +294,12 @@ def fox_grabber(url, text_widget):
 # Define npr
 def npr(url):
     # Exception handling, return nothing if Fox freezes
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-        soup = BeautifulSoup(response.text, 'lxml')
-    except Exception as e:
-        print(f'Error scraping fox article.')
+    response = get_response(url)
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
         return None
+    
+    soup = BeautifulSoup(response.text, 'lxml')
     
     # Find all information in article
     header_div = soup.find('div', class_='storytitle')
@@ -345,12 +344,7 @@ def npr(url):
 
 # Define npr_grabber
 def npr_grabber(url, text_widget):
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-        # print(response.text)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
 
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -386,11 +380,7 @@ def npr_grabber(url, text_widget):
     return
 
 def techcrunch(url):
-    try:
-        response = requests.get(url, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
     
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -432,11 +422,7 @@ def techcrunch(url):
 
 def techcrunch_grabber(url, text_widget):
     # Try to get a response from techcrunch
-    try:
-        response = requests.get(url, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
 
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -476,11 +462,7 @@ def techcrunch_grabber(url, text_widget):
     return
 
 def four_media(url):
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
     
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -530,11 +512,7 @@ def four_media(url):
 
 def four_media_grabber(url, text_widget):
     # Try to get a response from techcrunch
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
 
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -604,11 +582,7 @@ def four_media_grabber(url, text_widget):
 
 def wired(url):
     # Try to get the url, if it fails, return None
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
     
     # Get and check the status code
     if response.status_code != 200:
@@ -672,11 +646,7 @@ def wired(url):
 
 def wired_grabber(url, text_widget):
     # Get a response from wired
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
 
     # If response status code is not 200, return
     if response.status_code != 200:
@@ -728,11 +698,7 @@ def wired_grabber(url, text_widget):
     return
 
 def ap(url):
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
     
     if response.status_code != 200:
         print(f'Error: {response.status_code}')
@@ -773,11 +739,7 @@ def ap(url):
 
 
 def ap_grabber(url, text_widget):
-    try:
-        response = requests.get(url, headers=header, timeout=10)
-    except Exception as e:
-        print(f'Error: {e}')
-        return None
+    response = get_response(url)
     
     # Return if response does not equal 200
     if response.status_code != 200:
