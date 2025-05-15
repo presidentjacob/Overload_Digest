@@ -716,100 +716,11 @@ def wired_grabber(url, text_widget):
                     update_queue.put((text_widget, article.__str__()))
     return
 
-def ap(url):
-    response = get_response(url)
-    
-    if response.status_code != 200:
-        print(f'Error: {response.status_code}')
-        return None
-    
-    soup = BeautifulSoup(response.text, 'lxml')
-    ap_article = Article('ASSOCIATIVE PRESS NEWS')
-
-    headline_h1 = soup.find('h1', class_='Page-headline')
-    authors_div = soup.find('div', class_='Page-authors')
-    time_div = soup.find('div', class_='Page-dateModified')
-    paragraphs_div = soup.find('div', class_='RichTextStoryBody RichTextBody')
-
-
-    if not headline_h1 or not paragraphs_div:
-        return None
-    
-    headline = headline_h1.text.strip()
-    setattr(ap_article, 'header', headline + '\n')
-    
-    if authors_div:
-        authors = [authors.text.strip() for authors in authors_div.find_all('a')]
-        all_authors = ', '.join(authors)
-        setattr(ap_article, 'author', all_authors + '\n')
-
-    if time_div:
-        time = time_div.text.strip()
-        setattr(ap_article, 'time', time + '\n')
-    
-    paragraphs_div = paragraphs_div.find_all('p')
-    for paragraphs in paragraphs_div:
-        paragraph_text = paragraphs.get_text(separator=' ', strip=True)
-        if 'AP' not in paragraph_text:
-            formatted_paragraph = paragraph_text
-            setattr(ap_article, 'paragraphs', formatted_paragraph + '\n\n')
-
-    return ap_article
-
-
-def ap_grabber(url, text_widget):
-    response = get_response(url)
-    
-    # Return if response does not equal 200
-    if response.status_code != 200:
-        print(f'Error: {response.status_code}')
-        return None
-
-    # Get the soup from the response
-    time.sleep(5)
-    soup = BeautifulSoup(response.text, 'lxml')
-    rp = read_robots_txt(url)
-    crawl_delay = rp.crawl_delay(header['User-Agent'])
-
-    # Find all links to articles
-    links_a = soup.find_all('h3', class_='PagePromo-title')
-    seen_urls = set()
-
-    # If links exist
-    if links_a:
-        print('found links')
-        for link in links_a:
-            print('in loop')
-            # Get the link
-            try:
-                href = link.get('href')
-            except Exception as e:
-                print(f'Error: {e}')
-                continue
-
-            if href.startswith('/'):
-                href = urljoin(url, href)
-
-            # If the link is not in seen_urls and can be fetched, add it to seen_urls
-            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
-                seen_urls.add(href)
-
-                # Wait between 3-15 seconds to look human
-                time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
-
-                article = ap(href)
-
-                if article:
-                    update_queue.put((text_widget, article.__str__()))
-
-
 def main():
     # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
-    ap_url = 'https://apnews.com'
-
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
     four_zero_four_media_url = 'https://www.404media.co'
@@ -873,8 +784,6 @@ def main():
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
-
-    threading.Thread(target=scrape_and_print, args=(ap_grabber, ap_url, text_widgets[2],)).start()
 
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
