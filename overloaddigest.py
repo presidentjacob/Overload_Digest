@@ -120,6 +120,7 @@ def CNN(url):
     WebDriverWait(driver, 2)
 
     html = driver.page_source
+    driver.quit()
 
     # Parse into soup as lxml
     soup = BeautifulSoup(html, 'lxml')
@@ -188,6 +189,7 @@ def CNN_grabber(url, text_widget):
     WebDriverWait(driver, 2)
 
     html = driver.page_source
+    driver.quit()
 
     # Parse all text to lxml
     soup = BeautifulSoup(html, 'lxml')
