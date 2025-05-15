@@ -701,7 +701,6 @@ def wired_grabber(url, text_widget):
     return
 
 def bbc(url):
-    print(f'BBC: {url}')
     # Get a response from BBC
     response = get_response(url)
 
@@ -762,8 +761,7 @@ def bbc_grabber(url, text_widget):
     # Find all links to articles
     links_div = soup.find_all('div', attrs={'data-testid': 'anchor-inner-wrapper'})
     seen_urls = set()
-    print(links_div)
-    
+
     # If links exist
     if links_div:
         print('Found links')
@@ -782,7 +780,6 @@ def bbc_grabber(url, text_widget):
                     href = urljoin(url, href)
 
                 if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
-                    print(href)
                     seen_urls.add(href)
 
                     # Wait between 3-15 seconds to look human
