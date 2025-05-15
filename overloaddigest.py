@@ -10,6 +10,7 @@ import random
 import urllib.robotparser
 from urllib.parse import urljoin
 import re
+import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -144,7 +145,6 @@ def CNN(url):
     full_article = ''
 
     if not paragraph_div:
-        print('No paragraphs found')
         return None
 
     # Only add information to the article class only if paragraph_div exists
@@ -700,6 +700,49 @@ def wired_grabber(url, text_widget):
                     update_queue.put((text_widget, article.__str__()))
     return
 
+def bbc(url):
+    print(f'BBC: {url}')
+    # Get a response from BBC
+    response = get_response(url)
+
+    # If response status code is not 200, return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all information regarding file
+    header_div = soup.find('h1', class_=re.compile(r'sc-.*'))
+    time_tag = soup.find('time')
+    author_span = soup.find('span', class_=re.compile(r'sc-.*lasLGY'))
+    paragraphs = soup.find_all('p', class_=re.compile(r'sc-.*hxuGS'))
+
+    if not header_div or not paragraphs:
+        return None
+    bbc_article = Article('BBC')
+    full_article = ''
+
+    if header_div:
+        setattr(bbc_article, 'header', header_div.text.strip())
+    
+    if time_tag and time_tag.has_attr('datetime'):
+        time = time_tag['datetime']
+        time = datetime.datetime.fromisoformat(time).strftime('%Y-%m-%d %H:%M')
+        setattr(bbc_article, 'time', time + '\n')
+
+    if author_span:
+        setattr(bbc_article, 'author', author_span.text.strip() + '\n')
+
+    if paragraphs:
+        for paragraph in paragraphs:
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            full_article += paragraph_text + '\n\n'
+        full_article += separator
+        setattr(bbc_article, 'paragraphs', full_article)
+
+    return bbc_article
+
 def bbc_grabber(url, text_widget):
     # Get a response from BBC
     response = get_response(url)
@@ -712,12 +755,43 @@ def bbc_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
     # Create a soup from response
-    soup = BeautifulSoup(response.text, 'lxml')
+    html = open_driver(url)
+
+    soup = BeautifulSoup(html, 'lxml')
 
     # Find all links to articles
-    links_div = soup.find_all('div', class_=re.compile(r'sc.*'))
+    links_div = soup.find_all('div', attrs={'data-testid': 'anchor-inner-wrapper'})
     seen_urls = set()
+    print(links_div)
     
+    # If links exist
+    if links_div:
+        print('Found links')
+        for div in links_div:
+            for link in div.find_all('a', href=True):
+                # Get the link
+                try:
+                    href = link.get('href')
+                except Exception as e:
+                    print(f'Error: {e}')
+                    continue
+
+                if 'article' not in href:
+                    continue
+                if href.startswith('/'):
+                    href = urljoin(url, href)
+
+                if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
+                    print(href)
+                    seen_urls.add(href)
+
+                    # Wait between 3-15 seconds to look human
+                    time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
+
+                    article = bbc(href)
+                    
+                    if article:
+                        update_queue.put((text_widget, article.__str__()))
 
     return
 
@@ -795,6 +869,8 @@ def main():
     threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
     threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
+
+    threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
 
     window.after(15, update_gui, window)
 
