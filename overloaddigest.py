@@ -700,15 +700,38 @@ def wired_grabber(url, text_widget):
                     update_queue.put((text_widget, article.__str__()))
     return
 
+def bbc_grabber(url, text_widget):
+    # Get a response from BBC
+    response = get_response(url)
+
+    # If response status code is not 200, return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
+    # Create a soup from response
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Find all links to articles
+    links_div = soup.find_all('div', class_=re.compile(r'sc.*'))
+    seen_urls = set()
+    
+
+    return
+
 def main():
     # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
+    bbc_url = 'https://www.bbc.com'
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
     four_zero_four_media_url = 'https://www.404media.co'
     wired_url = 'https://www.wired.com'
+
 
     # Create main window
     window = tk.Tk()
