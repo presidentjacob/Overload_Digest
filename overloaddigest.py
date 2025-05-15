@@ -112,8 +112,17 @@ def CNN(url):
         print(f'Error: {response.status_code}')
         return None
 
+    driver_options = webdriver.ChromeOptions()
+    driver_options.add_argument('--headless')
+    driver = webdriver.Chrome(options=driver_options)
+    driver.get(url)
+    
+    WebDriverWait(driver, 2)
+
+    html = driver.page_source
+
     # Parse into soup as lxml
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
 
     # Get all information regarding file
     header_div = soup.find('div', class_='headline__wrapper')
@@ -156,7 +165,6 @@ def CNN(url):
         setattr(cnn_article, 'paragraphs', full_article)
 
     print('article:')
-    print(cnn_article.__str__())
 
     return cnn_article
 
@@ -697,12 +705,14 @@ def wired_grabber(url, text_widget):
     if links_div:
         for link in links_div:
             # Get the link
-            if link.find('a', href=True).get('href'):
+            try:
                 href = link.find('a', href=True).get('href')
-                if href.startswith('/'):
-                    href = urljoin(url, href)
-            else:
+            except Exception as e:
+                print(f'Error: {e}')
                 continue
+
+            if href.startswith('/'):
+                href = urljoin(url, href)
 
             if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
                 seen_urls.add(href)
