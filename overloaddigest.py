@@ -46,6 +46,20 @@ separator = '-' * 77
 # Setup queue for each article to be scraped
 update_queue = queue.Queue()
 
+def open_driver(url):
+    # Setup a headless driver
+    options = Options()
+    options.add_argument('--headless')
+    # Disable blink features to make it look like a user
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('user-agent={}'.format(header['User-Agent']))
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+    WebDriverWait(driver, 5)
+    html = driver.page_source
+    driver.quit()
+    return html
+
 def get_response(url):
     try:
         response = requests.get(url, headers=header, timeout=10)
@@ -112,15 +126,7 @@ def CNN(url):
         print(f'Error: {response.status_code}')
         return None
 
-    driver_options = webdriver.ChromeOptions()
-    driver_options.add_argument('--headless')
-    driver = webdriver.Chrome(options=driver_options)
-    driver.get(url)
-    
-    WebDriverWait(driver, 2)
-
-    html = driver.page_source
-    driver.quit()
+    html = open_driver(url)
 
     # Parse into soup as lxml
     soup = BeautifulSoup(html, 'lxml')
@@ -165,8 +171,6 @@ def CNN(url):
         full_article += separator
         setattr(cnn_article, 'paragraphs', full_article)
 
-    print('article:')
-
     return cnn_article
 
 # Define a grabber for CNN.com
@@ -181,15 +185,7 @@ def CNN_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
-    driver_options = webdriver.ChromeOptions()
-    driver_options.add_argument('--headless')
-    driver = webdriver.Chrome(options=driver_options)
-    driver.get(url)
-    
-    WebDriverWait(driver, 2)
-
-    html = driver.page_source
-    driver.quit()
+    html = open_driver(url)
 
     # Parse all text to lxml
     soup = BeautifulSoup(html, 'lxml')
@@ -212,7 +208,6 @@ def CNN_grabber(url, text_widget):
             # Improve runtime and make sure articles are not read twice and respect robots.txt
             if href not in seen_urls or rp.can_fetch(header['User-Agent'], href):
                 seen_urls.add(href)
-                print(href)
 
                 # Wait between 3-15 seconds to look human
                 time.sleep(crawl_delay if crawl_delay else random.randint(3,15))
@@ -415,8 +410,9 @@ def techcrunch(url):
         print(f'Error: {response.status_code}')
         return None
     
+    html = open_driver(url)
     # Create soup
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
     
     # Find all information in article
     headline = soup.find('h1', class_='article-hero__title wp-block-post-title')
@@ -461,8 +457,10 @@ def techcrunch_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
+    html = open_driver(url)
+
     # Setup readable text
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
 
     # Find all links to articls
     links_div = soup.find_all('div', class_='loop-card__content')
@@ -552,7 +550,8 @@ def four_media_grabber(url, text_widget):
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
     # Use Selenium to click more articles
-    # THIS DOESNT FUCKING WORK
+    # Nevermind this does work :3
+    # Don't call open_driver, as we need to click the button
     driver_options = webdriver.ChromeOptions()
     driver_options.add_argument('--headless')
     driver = webdriver.Chrome(options=driver_options)
@@ -618,26 +617,9 @@ def wired(url):
         print(f'Error: {response.status_code}')
         return None
     
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('user-agent={}'.format(header['User-Agent']))
-    driver = webdriver.Chrome(options=options)
-    driver.get(url)
-    
-    try:
-        WebDriverWait(driver, 10)
-    except Exception as e:
-        print(f'Error waiting for page to load: {e}')
-        driver.quit()
-        return None
-
-    html = driver.page_source
-
+    html = open_driver(url)
     # Create a soup from response
     soup = BeautifulSoup(html, 'lxml')
-
-    driver.quit()
 
     wired_article = Article('WIRED')
 
@@ -685,23 +667,13 @@ def wired_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
 
-    # Use Selenium to get information in the article that's dynamically loaded
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_argument('user-agent={}'.format(header['User-Agent']))
-    driver = webdriver.Chrome(options=options)
-    driver.get(url)
-    time.sleep(5)
-
-    html = driver.page_source
+    html = open_driver(url)
 
     # Create a soup from response
     soup = BeautifulSoup(html, 'lxml')
 
     # Find all links to articles
     links_div = soup.find_all('div', class_=re.compile(r'SummaryItemContent.*summary-item__content'))
-    driver.quit()
     seen_urls = set()
     # If links exist
     if links_div:
