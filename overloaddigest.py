@@ -754,9 +754,9 @@ def bbc_grabber(url, text_widget):
     rp = read_robots_txt(url)
     crawl_delay = rp.crawl_delay(header['User-Agent'])
     # Create a soup from response
-    html = open_driver(url)
+    # html = open_driver(url)
 
-    soup = BeautifulSoup(html, 'lxml')
+    soup = BeautifulSoup(response.text, 'lxml')
 
     # Find all links to articles
     links_div = soup.find_all('div', attrs={'data-testid': 'anchor-inner-wrapper'})
@@ -764,7 +764,6 @@ def bbc_grabber(url, text_widget):
 
     # If links exist
     if links_div:
-        print('Found links')
         for div in links_div:
             for link in div.find_all('a', href=True):
                 # Get the link
@@ -792,12 +791,99 @@ def bbc_grabber(url, text_widget):
 
     return
 
+def cbs(url):
+    # Get a response from BBC
+    response = get_response(url)
+    # If response status code is not 200, return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    soup = BeautifulSoup(response.text, 'lxml')
+    
+    # Find all article content
+    header_h1 = soup.find('h1', class_='content__title')
+    authors = soup.find_all('span', class_=re.compile(r'byline__author*'))
+    time = soup.find('time')
+    paragraphs_section = soup.find('section', class_='content__body')
+
+    if not header_h1 or not paragraphs_section:
+        return None
+    
+    cbs_article = Article('CBS NEWS')
+    full_article = ''
+    if header_h1:
+        setattr(cbs_article, 'header', header_h1.text.strip())
+    
+    if authors:
+        authors = [author.text.strip() for author in authors]
+        all_authors = ', '.join(authors)
+        setattr(cbs_article, 'author', all_authors + '\n')
+    
+    if time and time.has_attr('datetime'):
+        time = time['datetime']
+        time = datetime.datetime.fromisoformat(time).strftime('%Y %m %d %H:%M')
+        setattr(cbs_article, 'time', time + '\n')
+    elif time:
+        time = time.text.strip()
+        time = time.replace('Updated on: ', '')
+        setattr(cbs_article, 'time', time + '\n')
+
+    if paragraphs_section:
+        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_section.find_all('p')]
+        setattr(cbs_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+
+    return cbs_article
+
+def cbs_grabber(url, text_widget):
+    # Get a response from BBC
+    response = get_response(url)
+
+    # If response status code is not 200, return
+    if response.status_code != 200:
+        print(f'Error: {response.status_code}')
+        return None
+    
+    rp = read_robots_txt(url)
+    crawl_delay = rp.crawl_delay(header['User-Agent'])
+    # Create a soup from response
+    
+    # html = open_driver(url)
+
+    soup = BeautifulSoup(response.text, 'lxml')
+    links_article = soup.find_all('article', class_=re.compile(r'item.*'))
+    seen_urls = set()
+
+    if links_article:
+        for link in links_article:
+            # Get the link
+            try:
+                href = link.find('a', href=True).get('href')
+            except Exception as e:
+                print(f'Error: {e}')
+                continue
+
+            if href.startswith('/'):
+                href = urljoin(url, href)
+            
+            if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
+                seen_urls.add(href)
+
+                # Wait between 3-15 seconds to look human
+                time.sleep(crawl_delay if crawl_delay else random.randint(3, 15))
+
+                article = cbs(href)
+                
+                if article:
+                    update_queue.put((text_widget, article.__str__()))
+
 def main():
     # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
     npr_url = 'https://www.npr.org'
     bbc_url = 'https://www.bbc.com'
+    cbs_grabber_url = 'https://www.cbsnews.com'
     # Tech News
     techcrunch_url = 'https://techcrunch.com'
     four_zero_four_media_url = 'https://www.404media.co'
@@ -859,15 +945,16 @@ def main():
     # npr_grabber(npr_url, text_widgets[2])
 
     # Run threads to update per each article scraped.
-    threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
-    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
-    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
+    # threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
+    # threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
+    # threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
 
-    threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
-    threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
-    threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
+    # threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
+    # threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
+    # threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
 
-    threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
+    # threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
+    threading.Thread(target=scrape_and_print, args=(cbs_grabber, cbs_grabber_url, text_widgets[2],)).start()
 
     window.after(15, update_gui, window)
 
