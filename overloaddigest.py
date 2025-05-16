@@ -915,9 +915,14 @@ def abc(url):
         setattr(abc_article, 'subheader', subheader_h2.text.strip() + '\n')
 
     if authors:
-        authors = [author.text.strip() for author in authors]
-        all_authors = ', '.join(authors)
+        authors_array = []
+        for a in authors:
+            if a.find('h3') or a.find('h2') or a.find('a'):
+                break
+            authors_array.append(a.text.strip())
+        all_authors = ', '.join(authors_array)
         setattr(abc_article, 'author', all_authors + '\n')
+    
 
     if paragraphs_p:
         for paragraph in paragraphs_p:
