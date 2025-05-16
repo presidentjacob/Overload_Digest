@@ -514,6 +514,9 @@ def four_media(url):
 
     four_article = Article('404 MEDIA')
 
+    if not headline or not paragraphs_div.text:
+        return None
+
     if headline:
         setattr(four_article, 'header', headline.strip() + '\n')
     if subheadline:
@@ -795,8 +798,12 @@ def cbs(url):
     # Get a response from BBC
     response = get_response(url)
     # If response status code is not 200, return
-    if response.status_code != 200:
-        print(f'Error: {response.status_code}')
+    try:
+        if response.status_code != 200:
+            print(f'Error: {response.status_code}')
+            return None
+    except Exception as e:
+        print(f'Error: {e}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
