@@ -807,11 +807,10 @@ def cbs(url):
     time = soup.find('time')
     paragraphs_section = soup.find('section', class_='content__body')
 
-    if not header_h1 or not paragraphs_section:
+    if not header_h1 or not paragraphs_section or 'live updates' in header_h1.text:
         return None
     
     cbs_article = Article('CBS NEWS')
-    full_article = ''
     if header_h1:
         setattr(cbs_article, 'header', header_h1.text.strip())
     
@@ -945,15 +944,15 @@ def main():
     # npr_grabber(npr_url, text_widgets[2])
 
     # Run threads to update per each article scraped.
-    # threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
-    # threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
-    # threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
 
-    # threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
-    # threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
-    # threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
 
-    # threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
+    threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
     threading.Thread(target=scrape_and_print, args=(cbs_grabber, cbs_grabber_url, text_widgets[2],)).start()
 
     window.after(15, update_gui, window)
