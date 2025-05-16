@@ -893,8 +893,41 @@ def abc(url):
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
-    print(soup.prettify())
+    
+    # Find all information
+    header_h1 = soup.find('h1')
+    subheader_h2 = soup.find('div', attrs={'data-testid': 'prism-article-body'}).find('h2')
+    authors = soup.find_all('a', attrs={'data-testid': 'prism-linkbase'})
+    # Work on time div later, too difficult to find it right now
+    
+    paragraphs_p = soup.find_all('p')
 
+    if not header_h1 or not paragraphs_p:
+        return None
+    
+    abc_article = Article('ABC NEWS')
+    full_article = ''
+
+    if header_h1:
+        setattr(abc_article, 'header', header_h1.text.strip())
+
+    if subheader_h2:
+        setattr(abc_article, 'subheader', subheader_h2.text.strip() + '\n')
+
+    if authors:
+        authors = [author.text.strip() for author in authors]
+        all_authors = ', '.join(authors)
+        setattr(abc_article, 'author', all_authors + '\n')
+
+    if paragraphs_p:
+        for paragraph in paragraphs_p:
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            full_article += paragraph_text + '\n\n'
+        full_article += separator
+        setattr(abc_article, 'paragraphs', full_article)
+    
+    return abc_article
+    
 def abc_grabber(url, text_widget):
     # Get a response from ABC
     response = get_response(url)
