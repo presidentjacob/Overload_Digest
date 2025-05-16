@@ -497,7 +497,7 @@ def four_media(url):
     # Create soup
     soup = BeautifulSoup(response.text, 'lxml')
 
-    headline = soup.find('h1', class_='post-hero__title').text
+    headline = soup.find('h1', class_='post-hero__title')
 
     # Try to find a subheadline
     try:
@@ -513,11 +513,11 @@ def four_media(url):
 
     four_article = Article('404 MEDIA')
 
-    if not headline or not paragraphs_div.text:
+    if not headline or not paragraphs_div:
         return None
 
     if headline:
-        setattr(four_article, 'header', headline.strip() + '\n')
+        setattr(four_article, 'header', headline.text.strip() + '\n')
     if subheadline:
         setattr(four_article, 'subheader', subheadline.strip() + '\n')
     if time:
@@ -1045,16 +1045,16 @@ def main():
     # npr_grabber(npr_url, text_widgets[2])
 
     # Run threads to update per each article scraped.
-    # threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
-    # threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
-    # threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
+    threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
 
-    # threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
-    # threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
-    # threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(techcrunch_grabber, techcrunch_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(four_media_grabber, four_zero_four_media_url, text_widgets[1],)).start()
+    threading.Thread(target=scrape_and_print, args=(wired_grabber, wired_url, text_widgets[1],)).start()
 
-    # threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
-    # threading.Thread(target=scrape_and_print, args=(cbs_grabber, cbs_url, text_widgets[2],)).start()
+    threading.Thread(target=scrape_and_print, args=(bbc_grabber, bbc_url, text_widgets[2],)).start()
+    threading.Thread(target=scrape_and_print, args=(cbs_grabber, cbs_url, text_widgets[2],)).start()
     threading.Thread(target=scrape_and_print, args=(abc_grabber, abc_url, text_widgets[2],)).start()
 
     window.after(15, update_gui, window)
