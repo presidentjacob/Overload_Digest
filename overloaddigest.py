@@ -1,5 +1,5 @@
 import requests
-import textwrap
+import logging
 import tkinter as tk
 from tkinter import ttk, scrolledtext, font, Label
 from bs4 import BeautifulSoup
@@ -47,6 +47,8 @@ separator = '-' * 77
 # Setup queue for each article to be scraped
 update_queue = queue.Queue()
 
+logging.basicConfig(filename='scraper.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def open_driver(url):
     # Setup a headless driver
     options = Options()
@@ -64,9 +66,10 @@ def open_driver(url):
 def get_response(url):
     try:
         response = requests.get(url, headers=header, timeout=10)
+        logging.info(f'Fetched {url} with status code {response.status_code}')
         return response
     except requests.exceptions.RequestException as e:
-        print(f'Error: {e}')
+        logging.error(f'Error fetching {url}: {e}')
         return None
 
 # Update the gui, and recursively update
@@ -79,6 +82,7 @@ def update_gui(window):
             widget.insert('end', text)
             widget.config(state='disable')
     except queue.Empty:
+        logging.debug('Queue is empty, continuing')
         pass
 
     window.after(10, update_gui, window)
@@ -105,9 +109,11 @@ def auto_scroll(text_widget):
 
 # Function for threading
 def scrape_and_print(function, url, widget):
+        logging.info(f'Starting scrape for {url} using {function.__name__}')
         function(url, widget)
 
 def read_robots_txt(url):
+    logging.info(f'Reading robots.txt for {url}')
     rp = urllib.robotparser.RobotFileParser()
     robots_url = urljoin(url, '/robots.txt')
     try:
@@ -116,15 +122,15 @@ def read_robots_txt(url):
         rp.read()
         return rp
     except Exception as e:
-        print(f'Error reading robots.txt: {e}')
+        logging.error(f'Error reading robots.txt: {e}')
         return None
 
 # Define CNN grabber
 def CNN(url):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
     
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
 
     html = open_driver(url)
@@ -145,6 +151,7 @@ def CNN(url):
     full_article = ''
 
     if not paragraph_div:
+        logging.info('No paragraphs found, skipping article')
         return None
 
     # Only add information to the article class only if paragraph_div exists
@@ -175,6 +182,7 @@ def CNN(url):
 
 # Define a grabber for CNN.com
 def CNN_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
 
     # if no response return
@@ -198,7 +206,7 @@ def CNN_grabber(url, text_widget):
             try:
                 found_link = div.find('a', href=True)
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
             
             href = found_link.get('href')
@@ -218,10 +226,14 @@ def CNN_grabber(url, text_widget):
     return
 
 def fox(url):
+    logging.info(f'Fetching {url}')
     # Exception handling, return nothing if Fox freezes
     response = get_response(url)
     
-    if response.status_code != 200:
+    try:
+        if response.status_code != 200:
+            return None
+    except Exception as e:
         return None
 
     soup = BeautifulSoup(response.text, 'lxml')    
@@ -240,6 +252,7 @@ def fox(url):
 
     # Return if missing important content
     if not header_div or not paragraph_p:
+        logging.info('No paragraphs found, skipping article')
         return None
     
     # Only add information to the article class only if paragraph_div exists
@@ -277,6 +290,7 @@ def fox(url):
 
 # Define fox_grabber
 def fox_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
     https = 'https:'
 
@@ -316,10 +330,10 @@ def fox_grabber(url, text_widget):
 
 # Define npr
 def npr(url):
+    logging.info(f'Fetching {url}')
     # Exception handling, return nothing if Fox freezes
     response = get_response(url)
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
@@ -333,6 +347,7 @@ def npr(url):
 
     # Return if missing important content
     if not header_div or not paragraph_div:
+        logging.info('No paragraphs found, skipping article')
         return None
 
     npr_article = Article('NPR')
@@ -367,10 +382,10 @@ def npr(url):
 
 # Define npr_grabber
 def npr_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
 
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     rp = read_robots_txt(url)
@@ -403,6 +418,7 @@ def npr_grabber(url, text_widget):
     return
 
 def techcrunch(url):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
     
     if response.status_code != 200:
@@ -420,6 +436,7 @@ def techcrunch(url):
     paragraphs_p = soup.find_all('p', class_='wp-block-paragraph')
 
     if not headline or not paragraphs_p:
+        logging.info('No paragraphs found, skipping article')
         return None
 
     techcrunch_article = Article('TECHCRUNCH')
@@ -445,11 +462,11 @@ def techcrunch(url):
 
 
 def techcrunch_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Try to get a response from techcrunch
     response = get_response(url)
 
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     # Get information from read robots
@@ -473,7 +490,7 @@ def techcrunch_grabber(url, text_widget):
             try:
                 href = found_a.get('href')
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
 
             if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
@@ -488,10 +505,10 @@ def techcrunch_grabber(url, text_widget):
     return
 
 def four_media(url):
+    logging.info(f'Fetching {url}')
     response = get_response(url)
     
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     # Create soup
@@ -503,7 +520,7 @@ def four_media(url):
     try:
         subheadline = soup.find('div', class_='post-hero__excerpt').text
     except Exception:
-        print(f'No subheader found')
+        logging.error('No subheadline found')
     
     # Find the exact time text
     time = soup.find('time', class_='byline__date').text
@@ -514,6 +531,7 @@ def four_media(url):
     four_article = Article('404 MEDIA')
 
     if not headline or not paragraphs_div:
+        logging.info('No paragraphs found, skipping article')
         return None
 
     if headline:
@@ -540,11 +558,11 @@ def four_media(url):
 
 
 def four_media_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Try to get a response from techcrunch
     response = get_response(url)
 
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     # Read the robots.txt file
@@ -593,7 +611,7 @@ def four_media_grabber(url, text_widget):
             try:
                 href = found_a.get('href')
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
 
             if href.startswith('/'):
@@ -611,6 +629,7 @@ def four_media_grabber(url, text_widget):
     return
 
 def wired(url):
+    logging.info(f'Fetching {url}')
     # Try to get the url, if it fails, return None
     response = get_response(url)
     
@@ -658,12 +677,12 @@ def wired(url):
 
 
 def wired_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Get a response from wired
     response = get_response(url)
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     rp = read_robots_txt(url)
@@ -684,7 +703,7 @@ def wired_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
 
             if href.startswith('/'):
@@ -703,6 +722,7 @@ def wired_grabber(url, text_widget):
     return
 
 def bbc(url):
+    logging.info(f'Fetching {url}')
     # Get a response from BBC
     response = get_response(url)
 
@@ -720,7 +740,9 @@ def bbc(url):
     paragraphs = soup.find_all('p', class_=re.compile(r'sc-.*hxuGS'))
 
     if not header_div or not paragraphs:
+        logging.info('No paragraphs found, skipping article')
         return None
+    
     bbc_article = Article('BBC')
     full_article = ''
 
@@ -745,6 +767,7 @@ def bbc(url):
     return bbc_article
 
 def bbc_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Get a response from BBC
     response = get_response(url)
 
@@ -772,7 +795,7 @@ def bbc_grabber(url, text_widget):
                 try:
                     href = link.get('href')
                 except Exception as e:
-                    print(f'Error: {e}')
+                    logging.error(f'Error: {e}')
                     continue
 
                 if 'article' not in href:
@@ -794,15 +817,15 @@ def bbc_grabber(url, text_widget):
     return
 
 def cbs(url):
+    logging.info(f'Fetching {url}')
     # Get a response from BBC
     response = get_response(url)
     # If response status code is not 200, return
     try:
         if response.status_code != 200:
-            print(f'Error: {response.status_code}')
             return None
     except Exception as e:
-        print(f'Error: {e}')
+        logging.error(f'Error: {e}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
@@ -841,12 +864,12 @@ def cbs(url):
     return cbs_article
 
 def cbs_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Get a response from BBC
     response = get_response(url)
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     rp = read_robots_txt(url)
@@ -865,7 +888,7 @@ def cbs_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
 
             if href.startswith('/'):
@@ -884,12 +907,12 @@ def cbs_grabber(url, text_widget):
     return
 
 def abc(url):
+    logging.info(f'Fetching {url}')
     # Get a response from ABC
     response = get_response(url)
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
@@ -903,6 +926,7 @@ def abc(url):
     paragraphs_p = soup.find_all('p')
 
     if not header_h1 or not paragraphs_p:
+        logging.info('No paragraphs found, skipping article')
         return None
     
     abc_article = Article('ABC NEWS')
@@ -934,12 +958,12 @@ def abc(url):
     return abc_article
     
 def abc_grabber(url, text_widget):
+    logging.info(f'Fetching {url}')
     # Get a response from ABC
     response = get_response(url)
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
         return None
     
     rp = read_robots_txt(url)
@@ -957,7 +981,7 @@ def abc_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                print(f'Error: {e}')
+                logging.error(f'Error: {e}')
                 continue
 
             if href.startswith('/'):
@@ -977,6 +1001,7 @@ def abc_grabber(url, text_widget):
     return
 
 def main():
+    logging.info('Starting Overload Digest')
     # Political News
     cnn_url = 'https://www.cnn.com'
     fox_url = 'https://www.foxnews.com'
@@ -1045,6 +1070,7 @@ def main():
     # npr_grabber(npr_url, text_widgets[2])
 
     # Run threads to update per each article scraped.
+    logging.info('Starting threads')
     threading.Thread(target=scrape_and_print, args=(CNN_grabber, cnn_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(fox_grabber, fox_url, text_widgets[0],)).start()
     threading.Thread(target=scrape_and_print, args=(npr_grabber, npr_url, text_widgets[0],)).start()
