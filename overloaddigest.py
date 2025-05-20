@@ -206,7 +206,7 @@ def CNN_grabber(url, text_widget):
             try:
                 found_link = div.find('a', href=True)
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
             
             href = found_link.get('href')
@@ -421,9 +421,11 @@ def techcrunch(url):
     logging.info(f'Fetching {url}')
     response = get_response(url)
     
-    if response.status_code != 200:
-        print(f'Error: {response.status_code}')
-        return None
+    try:
+        if response.status_code != 200:
+            return None
+    except Exception as e:
+        logging.error(f'{e}')
     
     html = open_driver(url)
     # Create soup
@@ -490,7 +492,7 @@ def techcrunch_grabber(url, text_widget):
             try:
                 href = found_a.get('href')
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
 
             if href not in seen_urls and rp.can_fetch(header['User-Agent'], href):
@@ -588,7 +590,7 @@ def four_media_grabber(url, text_widget):
         button.click()
         time.sleep(2)
     except Exception as e:
-        print(f'Error: {e}')
+        print(f'{e}')
         driver.quit()
         return None
 
@@ -611,7 +613,7 @@ def four_media_grabber(url, text_widget):
             try:
                 href = found_a.get('href')
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
 
             if href.startswith('/'):
@@ -635,7 +637,7 @@ def wired(url):
     
     # Get and check the status code
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
+        print(f'{response.status_code}')
         return None
     
     html = open_driver(url)
@@ -703,7 +705,7 @@ def wired_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
 
             if href.startswith('/'):
@@ -728,7 +730,7 @@ def bbc(url):
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
+        print(f'{response.status_code}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
@@ -773,7 +775,7 @@ def bbc_grabber(url, text_widget):
 
     # If response status code is not 200, return
     if response.status_code != 200:
-        print(f'Error: {response.status_code}')
+        print(f'{response.status_code}')
         return None
     
     rp = read_robots_txt(url)
@@ -795,7 +797,7 @@ def bbc_grabber(url, text_widget):
                 try:
                     href = link.get('href')
                 except Exception as e:
-                    logging.error(f'Error: {e}')
+                    logging.error(f'{e}')
                     continue
 
                 if 'article' not in href:
@@ -825,7 +827,7 @@ def cbs(url):
         if response.status_code != 200:
             return None
     except Exception as e:
-        logging.error(f'Error: {e}')
+        logging.error(f'{e}')
         return None
     
     soup = BeautifulSoup(response.text, 'lxml')
@@ -888,7 +890,7 @@ def cbs_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
 
             if href.startswith('/'):
@@ -981,7 +983,7 @@ def abc_grabber(url, text_widget):
             try:
                 href = link.find('a', href=True).get('href')
             except Exception as e:
-                logging.error(f'Error: {e}')
+                logging.error(f'{e}')
                 continue
 
             if href.startswith('/'):
