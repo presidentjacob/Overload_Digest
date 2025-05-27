@@ -5,6 +5,7 @@ from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
 
+# Define techcrunch
 def techcrunch(url):
     logging.info(f'Fetching {url}')
     response = get_response(url)
@@ -50,7 +51,7 @@ def techcrunch(url):
 
     return techcrunch_article
 
-
+# Define techcrunch_grabber
 def techcrunch_grabber(url, text_widget, update_queue):
     logging.info(f'Fetching {url}')
     # Try to get a response from techcrunch

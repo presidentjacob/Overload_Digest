@@ -35,6 +35,14 @@ def main():
 
     update_queue = queue.Queue()
 
+    # Loading Screen
+    loading_window = tk.Tk()
+    loading_window.title('Loading...')
+    loading_window.geometry('300x100')
+    loading_window.configure(background='black')
+    loading_label = tk.Label(loading_window, text='Loading Overload Digest...', bg='black', fg='white', font=('Fixedsys', 16))
+    loading_label.pack(expand=True)
+    loading_window.update()
 
     # Create main window
     window = tk.Tk()
@@ -106,11 +114,12 @@ def main():
 
     window.after(15, update_gui, window, update_queue)
 
-    time.sleep(20)
-
+    time.sleep(40)
     # Disable configuration so user cannot type in widget
     # for widget in text_widgets:
     #     widget.config(state='disable')
+    loading_window.destroy()
+    window.deiconify()
 
     # Initialize window
     window.mainloop()
