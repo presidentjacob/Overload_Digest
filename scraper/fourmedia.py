@@ -3,7 +3,7 @@ import time, random, logging, re
 from urllib.parse import urljoin
 from article import Article
 from config import header, separator
-from utils import open_driver, get_response
+from utils import get_response
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
@@ -11,8 +11,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from scraper.base import read_robots_txt
-import queue
 
+# Function to scrape 404 Media articles
 def four_media(url):
     logging.info(f'Fetching {url}')
     response = get_response(url)
@@ -65,7 +65,7 @@ def four_media(url):
 
     return four_article
 
-
+# Function to grab 404 Media articles
 def four_media_grabber(url, text_widget, update_queue):
     logging.info(f'Fetching {url}')
     # Try to get a response from techcrunch

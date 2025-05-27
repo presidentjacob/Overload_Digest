@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
-import time, random, logging, re
-from urllib.parse import urljoin
+import time, random, logging
 from article import Article
 from config import header, separator
 from utils import open_driver, get_response

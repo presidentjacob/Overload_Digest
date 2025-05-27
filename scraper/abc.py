@@ -3,11 +3,10 @@ import time, random, logging, re
 from urllib.parse import urljoin
 from article import Article
 from config import header, separator
-from utils import open_driver, get_response
+from utils import get_response
 from scraper.base import read_robots_txt
-import queue
-import datetime
 
+# Function to scrape ABC News articles
 def abc(url):
     logging.info(f'Fetching {url}')
     # Get a response from ABC
@@ -58,7 +57,8 @@ def abc(url):
         setattr(abc_article, 'paragraphs', full_article)
     
     return abc_article
-    
+
+# Function to grab articles from ABC News
 def abc_grabber(url, text_widget, update_queue):
     logging.info(f'Fetching {url}')
     # Get a response from ABC

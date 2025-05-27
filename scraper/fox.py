@@ -3,10 +3,8 @@ import time, random, logging, re
 from urllib.parse import urljoin
 from article import Article
 from config import header, separator
-from utils import open_driver, get_response
+from utils import get_response
 from scraper.base import read_robots_txt
-import queue
-
 
 # Define Fox for scraping
 def fox(url):

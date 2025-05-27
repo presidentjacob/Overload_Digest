@@ -6,6 +6,7 @@ from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
 
+# Define wired to fetch content from a given URL
 def wired(url):
     logging.info(f'Fetching {url}')
     # Try to get the url, if it fails, return None
@@ -53,7 +54,7 @@ def wired(url):
 
     return wired_article
 
-
+# Define wired grabber to fetch articles from a given URL and update the text widget
 def wired_grabber(url, text_widget, update_queue):
     logging.info(f'Fetching {url}')
     # Get a response from wired

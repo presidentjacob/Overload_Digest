@@ -49,9 +49,8 @@ Enter this prompt into your bash terminal:
 * Each article is in an `Article` class for consistent formatting.
 * Code style emphasizes readability and modularity.
 
-## To Do
-* Fix errors in Fox News grabber.
+## To Do / Known Issues
 * Grab time in the ABC articles.
 * Create child classes for each article to inherit and change functions.
-* For easier readability and work, split functions and all content into separate files.
 * Take information on a user's computer to format separators better.
+* When first running and sometimes far after, the GUI will freeze.

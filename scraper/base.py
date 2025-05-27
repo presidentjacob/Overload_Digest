@@ -7,6 +7,7 @@ def scrape_and_print(function, url, widget):
         logging.info(f'Starting scrape for {url} using {function.__name__}')
         function(url, widget)
 
+# Function to read robots.txt file
 def read_robots_txt(url):
     logging.info(f'Reading robots.txt for {url}')
     rp = urllib.robotparser.RobotFileParser()

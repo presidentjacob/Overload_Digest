@@ -11,7 +11,6 @@ from scraper.fourmedia import four_media_grabber
 from scraper.wired import wired_grabber
 from scraper.cnn import cnn_grabber
 from gui import update_gui, auto_scroll
-from config import header, separator
 import time
 import queue
 

@@ -1,12 +1,9 @@
 from bs4 import BeautifulSoup
-import time, random, logging, re
-from urllib.parse import urljoin
+import time, random, logging
 from article import Article
 from config import header, separator
-from utils import open_driver, get_response
+from utils import get_response
 from scraper.base import read_robots_txt
-import queue
-
 
 # Define npr
 def npr(url):

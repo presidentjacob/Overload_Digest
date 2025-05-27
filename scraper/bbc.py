@@ -3,11 +3,11 @@ import time, random, logging, re
 from urllib.parse import urljoin
 from article import Article
 from config import header, separator
-from utils import open_driver, get_response
+from utils import get_response
 from scraper.base import read_robots_txt
-import queue
 import datetime
 
+# Define BBC to fetch content from a given URL
 def bbc(url):
     logging.info(f'Fetching {url}')
     # Get a response from BBC
@@ -53,6 +53,7 @@ def bbc(url):
 
     return bbc_article
 
+# Define BBC grabber to fetch articles from a given URL and update the text widget
 def bbc_grabber(url, text_widget, update_queue):
     logging.info(f'Fetching {url}')
     # Get a response from BBC

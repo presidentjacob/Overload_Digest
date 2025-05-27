@@ -5,7 +5,6 @@ from article import Article
 from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
-import queue
 
 # Define CNN grabber
 def cnn(url):
