@@ -26,7 +26,7 @@ def abc(url):
     #time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
 
     # Search for the date and time in the HTML instead
-    date_math = re.search(r'[A-Z][a-z]+ \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M', soup.get_text())
+    date_match = re.search(r'[A-Z][a-z]+ \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M', soup.get_text())
     
     paragraphs_p = soup.find_all('p')
 
@@ -65,7 +65,7 @@ def abc(url):
     #         if found_time:
     #             break
 
-    if date_math:
+    if date_match:
         setattr(abc_article, 'time', date_math.group().strip() + '\n')
         
     if paragraphs_p:
