@@ -23,8 +23,8 @@ def abc(url):
     subheader_h2 = soup.find('div', attrs={'data-testid': 'prism-article-body'}).find('h2')
     authors = soup.find_all('a', attrs={'data-testid': 'prism-linkbase'})
     # Work on time div later, too difficult to find it right now
-    time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
-
+    #time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
+    date_math = re.search(r'[A-Z][a-z]+ \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M', soup.get_text())
     
     paragraphs_p = soup.find_all('p')
 
@@ -52,17 +52,20 @@ def abc(url):
 
     # Search for a timezone in the time_div
     # Well now the code's not dying but it still doesn't find the time
-    if time_div:
-        found_time = False
-        for div in time_div:
-            for child in div.find_all('div'):
-                if re.search(r'[ECM]DT', child.get_text()):
-                    setattr(abc_article, 'time', child.text.strip() + '\n')
-                    found_time = True
-                    break
-            if found_time:
-                break
-    
+    # if time_div:
+    #     found_time = False
+    #     for div in time_div:
+    #         for child in div.find_all('div'):
+    #             if re.search(r'[A-Z][a-z]+ \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M', child.get_text()):
+    #                 setattr(abc_article, 'time', child.text.strip() + '\n')
+    #                 found_time = True
+    #                 break
+    #         if found_time:
+    #             break
+
+    if date_math:
+        setattr(abc_article, 'time', date_math.group().strip() + '\n')
+        
     if paragraphs_p:
         for paragraph in paragraphs_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
