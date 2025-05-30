@@ -23,6 +23,8 @@ def abc(url):
     subheader_h2 = soup.find('div', attrs={'data-testid': 'prism-article-body'}).find('h2')
     authors = soup.find_all('a', attrs={'data-testid': 'prism-linkbase'})
     # Work on time div later, too difficult to find it right now
+    time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
+
     
     paragraphs_p = soup.find_all('p')
 
@@ -47,8 +49,19 @@ def abc(url):
             authors_array.append(a.text.strip())
         all_authors = ', '.join(authors_array)
         setattr(abc_article, 'author', all_authors + '\n')
-    
 
+    # Search for a timezone in the time_div
+    # This code straight tortures the program Muhanga Correctional Facility style
+    # in here just for reference
+    # don't really want to keep it in tho
+    # ABC blood is on your hands
+    if time_div:
+        for div in time_div:
+            for child in div.find_all(div):
+                if re.search(r'[ECM]DT', child.get_text()):
+                    setattr(abc_article, 'time', child.text.strip() + '\n')
+                    break
+    
     if paragraphs_p:
         for paragraph in paragraphs_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
