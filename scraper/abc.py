@@ -51,16 +51,17 @@ def abc(url):
         setattr(abc_article, 'author', all_authors + '\n')
 
     # Search for a timezone in the time_div
-    # This code straight tortures the program Muhanga Correctional Facility style
-    # in here just for reference
-    # don't really want to keep it in tho
-    # ABC blood is on your hands
+    # Well now the code's not dying but it still doesn't find the time
     if time_div:
+        found_time = False
         for div in time_div:
-            for child in div.find_all(div):
+            for child in div.find_all('div'):
                 if re.search(r'[ECM]DT', child.get_text()):
                     setattr(abc_article, 'time', child.text.strip() + '\n')
+                    found_time = True
                     break
+            if found_time:
+                break
     
     if paragraphs_p:
         for paragraph in paragraphs_p:
