@@ -50,7 +50,5 @@ Enter this prompt into your bash terminal:
 * Code style emphasizes readability and modularity.
 
 ## To Do / Known Issues
-* Grab time in the ABC articles.
 * Create child classes for each article to inherit and change functions.
 * Take information on a user's computer to format separators better.
-* When first running and sometimes far after, the GUI will freeze.
