@@ -24,6 +24,8 @@ def abc(url):
     authors = soup.find_all('a', attrs={'data-testid': 'prism-linkbase'})
     # Work on time div later, too difficult to find it right now
     #time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
+
+    # Search for the date and time in the HTML instead
     date_math = re.search(r'[A-Z][a-z]+ \d{1,2}, \d{4}, \d{1,2}:\d{2} [AP]M', soup.get_text())
     
     paragraphs_p = soup.find_all('p')
