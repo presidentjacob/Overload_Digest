@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import FourZeroFourMediaArticle as Article
 from config import header, separator
 from utils import get_response
 from selenium.webdriver.common.action_chains import ActionChains
@@ -37,31 +37,34 @@ def four_media(url):
     authors_byline = soup.find('div', class_='byline')
     paragraphs_div = soup.find('div', class_='post__content no-overflow')
 
-    four_article = Article('404 MEDIA')
+    four_article = Article()
 
     if not headline or not paragraphs_div:
         logging.info('No paragraphs found, skipping article')
         return None
 
     if headline:
-        setattr(four_article, 'header', headline.text.strip() + '\n')
+        four_article.set_header(headline.text.strip())
+        
     if subheadline:
-        setattr(four_article, 'subheader', subheadline.strip() + '\n')
+        four_article.set_subheader(subheadline.text.strip())
+
     if time:
         # Use regex to replace multiple spaces with just one space, then strip spaces at front
-        setattr(four_article, 'time', re.sub(r'\s+', ' ', time).strip() + '\n')
+        four_article.set_time(re.sub(r'\s+', ' ', time).strip())
 
     # Get every author
     if authors_byline:
         authors = [authors.text.strip() for authors in authors_byline.find_all('span')]
         all_authors = ', '.join(authors)
         all_authors = all_authors.replace(',,', '').replace('·', '').strip().rstrip(',') + '\n'
-        setattr(four_article, 'author', all_authors)
+        four_article.set_author(all_authors)
 
     # Get every paragraph
     if paragraphs_div:
-        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_div.find_all('p')]
-        setattr(four_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+        for paragraph in paragraphs_div.find_all('p'):
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            four_article.set_paragraphs(paragraph_text.strip())
 
     return four_article
 
@@ -134,5 +137,5 @@ def four_media_grabber(url, text_widget, update_queue):
 
             if article:
                 update_queue.put((text_widget, article.__str__()))
-
+                logging.info(article.logging_info())
     return

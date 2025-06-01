@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import FoxArticle as Article
 from config import header, separator
 from utils import get_response
 from scraper.base import read_robots_txt
@@ -29,8 +29,7 @@ def fox(url):
     date_span = soup.find('span', class_='article-date')
     paragraph_p = soup.find_all('p')
 
-    fox_article = Article('Fox News')
-    full_article = ''
+    fox_article = Article()
 
     # Return if missing important content
     if not header_div or not paragraph_p:
@@ -40,10 +39,10 @@ def fox(url):
     # Only add information to the article class only if paragraph_div exists
     # If there are no paragraphs, the article will not be added.
     if headline and paragraph_p:
-        setattr(fox_article, 'header', (headline.text.strip()))
+        fox_article.set_header(headline.text.strip())
 
     if subheader and paragraph_p:
-        setattr(fox_article, 'subheader', subheader.text.strip() + '\n')
+        fox_article.set_subheader(subheader.text.strip())
 
     # No clue what lambda does but this is the only way to get it working
 
@@ -51,22 +50,20 @@ def fox(url):
         author_link = author_div.find('a', href=lambda href: href and '/person/' in href)
         if author_link:
             author_name = author_link.text.strip()
-            setattr(fox_article, 'author', author_name + '\n')
+            fox_article.set_author(author_name)
 
     if date_span and paragraph_p:
         time_tag = date_span.find('time')
         if time_tag:
             time = time_tag.text.strip()
-            setattr(fox_article, 'time', time + '\n')
+            fox_article.set_time(time)
 
     if paragraph_p:
         for paragraph in paragraph_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
             if 'FOX News' not in paragraph and 'subcribed to' not in paragraph_text:
                 formatted_paragraph = paragraph_text
-                full_article += formatted_paragraph + '\n\n'
-        full_article += separator
-        setattr(fox_article, 'paragraphs', full_article)
+                fox_article.set_paragraphs(formatted_paragraph.strip())
     
     return fox_article
 
@@ -107,5 +104,6 @@ def fox_grabber(url, text_widget, update_queue):
 
                     if article:
                         update_queue.put((text_widget, article.__str__()))
+                        logging.info(article.logging_info())
 
     return

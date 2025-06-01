@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import time, random, logging
-from article import Article
+from article import NPRArticle as Article
 from config import header, separator
 from utils import get_response
 from scraper.base import read_robots_txt
@@ -27,15 +27,16 @@ def npr(url):
         logging.info('No paragraphs found, skipping article')
         return None
 
-    npr_article = Article('NPR')
-    full_article = ''
+    npr_article = Article()
 
     # Find and insert all content into npr_article
     if headline and paragraph_div:
-        setattr(npr_article, 'header', headline.text.strip())
+        npr_article.set_header(headline.text.strip())
 
-    if author_p and paragraph_div:
-        setattr(npr_article, 'author', f'{author_p.text.strip()}\n')
+    if author_p:
+        authors = [author.text.strip() for author in author_p.find_all('span', class_='byline__name')]
+        all_authors = ', '.join(authors)
+        npr_article.set_author(all_authors)
 
     # Take both the date and time of the article, located in two different spans
     if time_div and paragraph_div:
@@ -45,15 +46,13 @@ def npr(url):
         date_text = date_span.text.strip() if date_span else ''
         time_text = date_span.text.strip() if time_span else ''
 
-        setattr(npr_article, 'time', f'{date_text}, {time_text}')
+        npr_article.set_time(f'{date_text}, {time_text}')
 
     # Take the paragraph and remove any links in the text
     if paragraph_div:
         for paragraph in paragraph_div:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
-            full_article += paragraph_text +'\n'
-        full_article += separator
-        setattr(npr_article, 'paragraphs', full_article)
+            npr_article.set_paragraphs(paragraph_text.strip())
 
     return npr_article
 
@@ -91,5 +90,6 @@ def npr_grabber(url, text_widget, update_queue):
 
                     if article:
                         update_queue.put((text_widget, article.__str__()))
+                        logging.info(article.logging_info())
                     
     return

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import WiredArticle as Article
 from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
@@ -21,7 +21,7 @@ def wired(url):
     # Create a soup from response
     soup = BeautifulSoup(html, 'lxml')
 
-    wired_article = Article('WIRED')
+    wired_article = Article()
 
     # Find the headline information using regex as wired uses random classnames
     headline_h1 = soup.find('h1', class_=re.compile(r'BaseWrap.*'))
@@ -31,26 +31,24 @@ def wired(url):
     paragraphs_div = soup.find('div', class_='body__inner-container')
 
     if headline_h1:
-        headline = headline_h1.text.strip()
-        setattr(wired_article, 'header', headline + '\n')
+        wired_article.set_header(headline_h1.text.strip())
     
     if subheader_div:
-        subheader = subheader_div.text.strip()
-        setattr(wired_article, 'subheader', subheader + '\n')
+        wired_article.set_header(subheader_div.text.strip())
     
     if time:
-        time = time.text.strip()
-        setattr(wired_article, 'time', time + '\n')
+        wired_article.set_time(time.text.strip())
 
     if author_span:
         authors = [authors.text.strip() for authors in author_span]
         all_authors = ', '.join(authors)
         # all_authors = all_authors.replace(',,', '').replace('·', '').strip().rstrip(',') + '\n'
-        setattr(wired_article, 'author', all_authors)
+        wired_article.set_author(all_authors)
 
     if paragraphs_div:
-        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_div.find_all('p')]
-        setattr(wired_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+        for paragraph in paragraphs_div.find_all('p'):
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            wired_article.set_paragraphs(paragraph_text.strip())
 
     return wired_article
 
@@ -98,4 +96,5 @@ def wired_grabber(url, text_widget, update_queue):
                 
                 if article:
                     update_queue.put((text_widget, article.__str__()))
+                    logging.info(article.logging_info())
     return

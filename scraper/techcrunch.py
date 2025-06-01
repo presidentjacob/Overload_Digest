@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import time, random, logging
-from article import Article
+from article import TechCrunchArticle as Article
 from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
@@ -31,23 +31,22 @@ def techcrunch(url):
         return None
 
     techcrunch_article = Article('TECHCRUNCH')
-    full_article = ''
 
     if headline:
-        setattr(techcrunch_article, 'header', (headline.text.strip()))
+        techcrunch_article.set_header(headline.text.strip())
     
     if author_a:
-        setattr(techcrunch_article, 'author', author_a.text.strip())
+        authors = [author.text.strip() for author in author_a.find_all('span', class_='byline__name')]
+        all_authors = ', '.join(authors)
+        techcrunch_article.set_author(all_authors)
 
     if time_time:
-        setattr(techcrunch_article, 'time', time_time.text.strip())
+        techcrunch_article.set_time(time_time.text.strip())
 
     if paragraphs_p:
         for paragraphs in paragraphs_p:
             paragraph_text = paragraphs.get_text(separator=' ', strip=True)
-            full_article += paragraph_text + '\n\n'
-        full_article += separator
-        setattr(techcrunch_article, 'paragraphs', full_article)
+            techcrunch_article.set_paragraphs(paragraph_text.strip())
 
     return techcrunch_article
 
@@ -90,7 +89,8 @@ def techcrunch_grabber(url, text_widget, update_queue):
 
                 article = techcrunch(href)
 
-            if article:
-                update_queue.put((text_widget, article.__str__()))
+                if article:
+                    update_queue.put((text_widget, article.__str__()))
+                    logging.info(article.logging_info())
     
     return

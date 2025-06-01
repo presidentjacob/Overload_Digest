@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import CNNArticle as Article
 from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
@@ -22,14 +22,12 @@ def cnn(url):
     # Get all information regarding file
     header_div = soup.find('div', class_='headline__wrapper')
     headline = header_div.find('h1') if header_div else None
-    subheader = header_div.find('h2') if header_div else None
     author_div = soup.find('div', class_='byline__names vossi-byline__names')
     time_div = soup.find('div', class_='timestamp vossi-timestamp')
     paragraph_div = soup.find('div', class_='article__content')
 
     # Create a new article
-    cnn_article = Article('CNN')
-    full_article = ''
+    cnn_article = Article()
 
     if not paragraph_div:
         logging.info('No paragraphs found, skipping article')
@@ -38,26 +36,22 @@ def cnn(url):
     # Only add information to the article class only if paragraph_div exists
     # If there are no paragraphs, the article will not be added.
     if headline and paragraph_div:
-        setattr(cnn_article, 'header', headline.text.strip())
-
-    if subheader and paragraph_div:
-        setattr(cnn_article, 'subheader', subheader.text.strip() + '\n')
+        cnn_article.set_header(headline.text.strip())
 
     if author_div and paragraph_div:
         authors = [authors.text.strip() for authors in soup.find_all('span', class_='byline__name')]
-        setattr(cnn_article, 'author', ', '.join(authors) + '\n')
+        cnn_article.set_author(', '.join(authors))
 
     if time_div and paragraph_div:
         time = time_div.text
         time = time.replace('Updated', '')
         time = time.replace('Published', '')
-        setattr(cnn_article, 'time', time.strip() + '\n')
+        cnn_article.set_time(time.strip())
 
     if paragraph_div:
         for paragraph in paragraph_div.find_all('p'):
-            full_article += (paragraph.text.strip() +'\n\n')
-        full_article += separator
-        setattr(cnn_article, 'paragraphs', full_article)
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            cnn_article.set_paragraphs(paragraph_text.strip())
 
     return cnn_article
 
@@ -104,4 +98,5 @@ def cnn_grabber(url, text_widget, update_queue):
 
                 if article:
                     update_queue.put((text_widget, article.__str__()))
+                    logging.info(article.logging_info())
     return
