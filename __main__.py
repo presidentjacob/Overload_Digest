@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import ttk
 import threading, logging
 from scraper.abc import abc_grabber
 from scraper.bbc import bbc_grabber

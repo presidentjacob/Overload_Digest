@@ -53,3 +53,4 @@ Enter this prompt into your bash terminal:
 * Take information on a user's computer to format separators better.
 * Date time is formatted wrong in some articles like Wired.
 * Improve/standardized formatting.
+* Wired's formatting for authors is broken.

@@ -40,7 +40,7 @@ def wired(url):
         wired_article.set_time(time.text.strip())
 
     if author_span:
-        authors = [authors.text.strip() for authors in author_span]
+        authors = [author.text.strip() for author in author_span]
         all_authors = ', '.join(authors)
         # all_authors = all_authors.replace(',,', '').replace('·', '').strip().rstrip(',') + '\n'
         wired_article.set_author(all_authors)

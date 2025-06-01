@@ -4,6 +4,7 @@ from article import TechCrunchArticle as Article
 from config import header, separator
 from utils import open_driver, get_response
 from scraper.base import read_robots_txt
+import re
 
 # Define techcrunch
 def techcrunch(url):
@@ -23,7 +24,7 @@ def techcrunch(url):
     # Find all information in article
     headline = soup.find('h1', class_='article-hero__title wp-block-post-title')
     author_a = soup.find('a', class_='wp-block-tc23-author-card-name__link')
-    time_time = soup.find('time', class_='datetime')
+    time_time = soup.find('time')
     paragraphs_p = soup.find_all('p', class_='wp-block-paragraph')
 
     if not headline or not paragraphs_p:
@@ -36,9 +37,7 @@ def techcrunch(url):
         techcrunch_article.set_header(headline.text.strip())
     
     if author_a:
-        authors = [author.text.strip() for author in author_a.find_all('span', class_='byline__name')]
-        all_authors = ', '.join(authors)
-        techcrunch_article.set_author(all_authors)
+        techcrunch_article.set_author(author_a.text.strip())
 
     if time_time:
         techcrunch_article.set_time(time_time.text.strip())
