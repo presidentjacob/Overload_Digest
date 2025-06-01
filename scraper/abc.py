@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import ABCArticle as Article
 from config import header, separator
 from utils import get_response
 from scraper.base import read_robots_txt
@@ -34,14 +34,10 @@ def abc(url):
         logging.info('No paragraphs found, skipping article')
         return None
     
-    abc_article = Article('ABC NEWS')
-    full_article = ''
+    abc_article = Article()
 
     if header_h1:
-        setattr(abc_article, 'header', header_h1.text.strip())
-
-    if subheader_h2:
-        setattr(abc_article, 'subheader', subheader_h2.text.strip() + '\n')
+        abc_article.set_header(header_h1.text.strip())
 
     if authors:
         authors_array = []
@@ -50,7 +46,7 @@ def abc(url):
                 break
             authors_array.append(a.text.strip())
         all_authors = ', '.join(authors_array)
-        setattr(abc_article, 'author', all_authors + '\n')
+        abc_article.set_author(all_authors)
 
     # Search for a timezone in the time_div
     # Well now the code's not dying but it still doesn't find the time
@@ -66,14 +62,12 @@ def abc(url):
     #             break
 
     if date_match:
-        setattr(abc_article, 'time', date_math.group().strip() + '\n')
+        abc_article.set_time(date_match.group().strip())
         
     if paragraphs_p:
         for paragraph in paragraphs_p:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
-            full_article += paragraph_text + '\n\n'
-        full_article += separator
-        setattr(abc_article, 'paragraphs', full_article)
+            abc_article.set_paragraphs(paragraph_text.strip())
     
     return abc_article
 
