@@ -112,5 +112,5 @@ def abc_grabber(url, text_widget, update_queue):
                 
                 if article:
                     update_queue.put((text_widget, article.__str__()))
-    print('done')
+                    logging.info(article.logging_info())
     return

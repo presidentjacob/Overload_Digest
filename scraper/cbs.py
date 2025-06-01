@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import CBSArticle as Article
 from config import header, separator
 from utils import get_response
 from scraper.base import read_robots_txt
@@ -30,27 +30,28 @@ def cbs(url):
     if not header_h1 or not paragraphs_section or 'live updates' in header_h1.text:
         return None
     
-    cbs_article = Article('CBS NEWS')
+    cbs_article = Article()
     if header_h1:
-        setattr(cbs_article, 'header', header_h1.text.strip())
+        cbs_article.set_header(header_h1.text.strip())
     
     if authors:
         authors = [author.text.strip() for author in authors]
         all_authors = ', '.join(authors)
-        setattr(cbs_article, 'author', all_authors + '\n')
+        cbs_article.set_author(all_authors)
     
     if time and time.has_attr('datetime'):
         time = time['datetime']
         time = datetime.datetime.fromisoformat(time).strftime('%Y %m %d %H:%M')
-        setattr(cbs_article, 'time', time + '\n')
+        cbs_article.set_time(time)
     elif time:
         time = time.text.strip()
         time = time.replace('Updated on: ', '')
-        setattr(cbs_article, 'time', time + '\n')
+        cbs_article.set_time(time)
 
     if paragraphs_section:
-        paragraphs = [paragraphs.text.strip() for paragraphs in paragraphs_section.find_all('p')]
-        setattr(cbs_article, 'paragraphs', '\n\n'.join(paragraphs) + f'\n{separator}')
+        for paragraph in paragraphs_section.find_all('p'):
+            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+            cbs_article.set_paragraphs(paragraph_text.strip())
 
     return cbs_article
 
@@ -95,4 +96,5 @@ def cbs_grabber(url, text_widget, update_queue):
                 
                 if article:
                     update_queue.put((text_widget, article.__str__()))
+                    logging.info(article.logging_info())
     return

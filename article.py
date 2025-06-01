@@ -1,3 +1,5 @@
+from config import separator
+
 # Set up an article class to hold the data from the article
 class Article:
     def __init__(self, source):
@@ -9,7 +11,7 @@ class Article:
         self.paragraphs = ''
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.subheader}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
     
     def set_header(self, header):
         self.header = header
@@ -39,7 +41,7 @@ class CNNArticle(Article):
         super().__init__('CNN')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -61,7 +63,7 @@ class NPRArticle(Article):
         super().__init__('NPR')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -83,7 +85,7 @@ class FoxArticle(Article):
         super().__init__('FOX NEWS')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.subheader}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.subheader}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
     
     def set_header(self, header):
         super().set_header(header)
@@ -108,7 +110,7 @@ class TechCrunchArticle(Article):
         super().__init__('TECHCRUNCH')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -130,7 +132,7 @@ class WiredArticle(Article):
         super().__init__('WIRED')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -152,7 +154,7 @@ class FourZeroFourMediaArticle(Article):
         super().__init__('404 MEDIA')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -177,7 +179,7 @@ class BBCArticle(Article):
         super().__init__('BBC NEWS')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -199,7 +201,7 @@ class CBSArticle(Article):
         super().__init__('CBS NEWS')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n{self.author}\n{self.time}\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)
@@ -221,7 +223,7 @@ class ABCArticle(Article):
         super().__init__('ABC NEWS')
 
     def __str__(self):
-        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}'
+        return f'\n{self.source}\n\n{self.header}\n\n{self.author}\n\n{self.time}\n\n{self.paragraphs}\n\n{separator}'
 
     def set_header(self, header):
         super().set_header(header)

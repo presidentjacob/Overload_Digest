@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import time, random, logging, re
 from urllib.parse import urljoin
-from article import Article
+from article import BBCArticle as Article
 from config import header, separator
 from utils import get_response
 from scraper.base import read_robots_txt
@@ -30,26 +30,23 @@ def bbc(url):
         logging.info('No paragraphs found, skipping article')
         return None
     
-    bbc_article = Article('BBC')
-    full_article = ''
+    bbc_article = Article()
 
     if header_div:
-        setattr(bbc_article, 'header', header_div.text.strip())
+        bbc_article.set_header(header_div.text.strip())
     
     if time_tag and time_tag.has_attr('datetime'):
         time = time_tag['datetime']
         time = datetime.datetime.fromisoformat(time).strftime('%Y-%m-%d %H:%M')
-        setattr(bbc_article, 'time', time + '\n')
+        bbc_article.set_time(time)
 
     if author_span:
-        setattr(bbc_article, 'author', author_span.text.strip() + '\n')
+        bbc_article.set_author(author_span.text.strip())
 
     if paragraphs:
         for paragraph in paragraphs:
             paragraph_text = paragraph.get_text(separator=' ', strip=True)
-            full_article += paragraph_text + '\n\n'
-        full_article += separator
-        setattr(bbc_article, 'paragraphs', full_article)
+            bbc_article.set_paragraphs(paragraph_text.strip())
 
     return bbc_article
 
@@ -101,5 +98,5 @@ def bbc_grabber(url, text_widget, update_queue):
                     
                     if article:
                         update_queue.put((text_widget, article.__str__()))
-
+                        logging.info(article.logging_info())
     return
