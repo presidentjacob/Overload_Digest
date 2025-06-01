@@ -47,7 +47,7 @@ def four_media(url):
         four_article.set_header(headline.text.strip())
         
     if subheadline:
-        four_article.set_subheader(subheadline.text.strip())
+        four_article.set_subheader(subheadline.strip())
 
     if time:
         # Use regex to replace multiple spaces with just one space, then strip spaces at front

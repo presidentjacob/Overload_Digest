@@ -30,7 +30,7 @@ def techcrunch(url):
         logging.info('No paragraphs found, skipping article')
         return None
 
-    techcrunch_article = Article('TECHCRUNCH')
+    techcrunch_article = Article()
 
     if headline:
         techcrunch_article.set_header(headline.text.strip())
