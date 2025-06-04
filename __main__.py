@@ -9,7 +9,7 @@ from scraper.techcrunch import techcrunch_grabber
 from scraper.fourmedia import four_media_grabber
 from scraper.wired import wired_grabber
 from scraper.cnn import cnn_grabber
-from gui import update_gui, auto_scroll
+from gui import update_gui, auto_scroll, create_loading_window, create_main_window
 import time
 import queue
 
@@ -34,64 +34,8 @@ def main():
 
     update_queue = queue.Queue()
 
-    # Loading Screen
-    loading_window = tk.Tk()
-    loading_window.title('Loading...')
-    loading_window.geometry('300x100')
-    loading_window.configure(background='black')
-    loading_label = tk.Label(loading_window, text='Loading Overload Digest...', bg='black', fg='white', font=('Fixedsys', 16))
-    loading_label.pack(expand=True)
-    loading_window.update()
-
-    # Create main window
-    window = tk.Tk()
-    window.title('Overload Digest')
-    window.geometry('640x480')
-    window.configure(background='black')
-    window.state('zoomed')
-
-    # Create title headline on Overload Digest
-    # T1 = tk.Text(window, bg='black', fg='gray50', insertbackground='white', cursor='arrow')
-    # T1.tag_configure('center', justify='center', font=('Times New Roman', 50))
-    # T1.insert('1.0', 'OVERLOAD DIGEST')
-    # T1.tag_add('center', '1.0', 'end')
-    # T1.config(state='disable')
-    # T1.pack(side='top', fill='x', padx=20, pady=(20,5))
-
-    # T2 = tk.Text(window, bg='black', fg='gray45', insertbackground='white', cursor='arrow')
-    # T2.tag_configure('center', justify='center', font=('Times New Roman', 35))
-    # T2.insert('1.0', 'NEWS DOESN\'T GET WORSE THAN THIS')
-    # T2.tag_add('center', '1.0', 'end')
-    # T2.config(state='disable')
-    # T2.pack(side='top', fill='x', padx=20, pady=(5,20))
-
-    T1 = tk.Label(window, text='オーバーロード・ダイジェスト', bg='black', fg='gray50', font=('MS Gothic', 35))
-    T1.pack(side='top', fill='x')
-    T2 = tk.Label(window, text='OVERLOAD DIGEST', bg='black', fg='gray50', font=('Fixedsys', 35))
-    T2.pack(side='top', fill='x')
-    T3 = tk.Label(window, text='超载摘要', bg='black', fg='gray50', font=('Microsoft YaHei', 35))
-    T3.pack(side='top', fill='x')
-
-    frame = tk.Frame(window, bg='black')
-    frame.pack(fill='both', expand=True)
-
-    # Define a scrollbar for user to scroll through information
-    scrollbar = tk.Scrollbar(frame, orient='vertical')
-    text_widgets = []
-
-    # Setup text widgets for articles to be inserted.
-    for i in range(3):
-        text = tk.Text(frame, wrap='word', bg='black', fg='white', insertbackground='white', cursor='arrow',
-                       yscrollcommand=scrollbar.set, font=('Fixedsys', 16))
-        text.grid(row=0, column=i, sticky='nsew', padx = 10, pady=10)
-        text.config(state='disable')
-        text_widgets.append(text)
-        auto_scroll(text)
-
-    # Configure column resizing
-    for i in range(3):
-        frame.columnconfigure(i, weight=1)
-    frame.rowconfigure(0, weight=1)
+    loading_window = create_loading_window()
+    window, text_widgets = create_main_window()
 
     # CNN_grabber(cnn_url, text_widgets[0])
     # fox_grabber(fox_url, text_widgets[1])

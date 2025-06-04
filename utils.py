@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from config import header
+from screeninfo import get_monitors
 
 def open_driver(url):
     # Setup a headless driver
@@ -26,3 +27,16 @@ def get_response(url):
     except requests.exceptions.RequestException as e:
         logging.error(f'Error fetching {url}: {e}')
         return None
+
+def screen_info():
+    # Get screen information
+    monitors = {}
+
+    for num, m in enumerate(get_monitors()):
+        monitors[num] = {
+            'width': m.width,
+            'height': m.height,
+        }
+
+    logging.info(f'Screen information: {monitors}')
+    return monitors
