@@ -17,9 +17,13 @@ def four_media(url):
     logging.info(f'Fetching {url}')
     response = get_response(url)
     
-    if response.status_code != 200:
+    try:
+        if response.status_code != 200:
+            return None
+    except Exception as e:
+        logging.error(f'Error fetching {url}: {e}')
         return None
-    
+        
     # Create soup
     soup = BeautifulSoup(response.text, 'lxml')
 

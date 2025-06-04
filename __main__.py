@@ -1,4 +1,3 @@
-import tkinter as tk
 import threading, logging
 from scraper.abc import abc_grabber
 from scraper.bbc import bbc_grabber
@@ -9,14 +8,12 @@ from scraper.techcrunch import techcrunch_grabber
 from scraper.fourmedia import four_media_grabber
 from scraper.wired import wired_grabber
 from scraper.cnn import cnn_grabber
-from gui import update_gui, auto_scroll, create_loading_window, create_main_window
+from gui import update_gui, create_loading_window, create_main_window
 import time
 import queue
+from utils import scrape_and_print
 
 logging.basicConfig(filename='scraper.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-def scrape_and_print(scraper_function, url, text_widget, update_queue):
-    scraper_function(url, text_widget, update_queue)
 
 def main():
     logging.info('Starting Overload Digest')

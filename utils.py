@@ -40,3 +40,6 @@ def screen_info():
 
     logging.info(f'Screen information: {monitors}')
     return monitors
+
+def scrape_and_print(scraper_function, url, text_widget, update_queue):
+    scraper_function(url, text_widget, update_queue)
