@@ -28,15 +28,8 @@ def four_media(url):
     soup = BeautifulSoup(response.text, 'lxml')
 
     headline = soup.find('h1', class_='post-hero__title')
-
-    # Try to find a subheadline
-    try:
-        subheadline = soup.find('div', class_='post-hero__excerpt').text
-    except Exception:
-        logging.error('No subheadline found')
-    
-    # Find the exact time text
-    time = soup.find('time', class_='byline__date').text
+    subheadline = soup.find('div', class_='post-hero__excerpt')
+    time = soup.find('time', class_='byline__date')
 
     authors_byline = soup.find('div', class_='byline')
     paragraphs_div = soup.find('div', class_='post__content no-overflow')
@@ -51,11 +44,11 @@ def four_media(url):
         four_article.set_header(headline.text.strip())
         
     if subheadline:
-        four_article.set_subheader(subheadline.strip())
+        four_article.set_subheader(subheadline.text.strip())
 
     if time:
         # Use regex to replace multiple spaces with just one space, then strip spaces at front
-        four_article.set_time(re.sub(r'\s+', ' ', time).strip())
+        four_article.set_time(re.sub(r'\s+', ' ', time.text).strip())
 
     # Get every author
     if authors_byline:

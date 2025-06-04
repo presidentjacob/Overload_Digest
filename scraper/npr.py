@@ -34,9 +34,7 @@ def npr(url):
         npr_article.set_header(headline.text.strip())
 
     if author_p:
-        authors = [author.text.strip() for author in author_p.find_all('span', class_='byline__name')]
-        all_authors = ', '.join(authors)
-        npr_article.set_author(all_authors)
+        npr_article.set_author(author_p.text.strip())
 
     # Take both the date and time of the article, located in two different spans
     if time_div and paragraph_div:
@@ -50,8 +48,8 @@ def npr(url):
 
     # Take the paragraph and remove any links in the text
     if paragraph_div:
-        for paragraph in paragraph_div:
-            paragraph_text = paragraph.get_text(separator=' ', strip=True)
+        for paragraph in paragraph_div.find_all('p'):
+            paragraph_text = paragraph.text.strip()
             npr_article.set_paragraphs(paragraph_text.strip())
 
     return npr_article

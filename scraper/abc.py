@@ -20,7 +20,7 @@ def abc(url):
     
     # Find all information
     header_h1 = soup.find('h1')
-    subheader_h2 = soup.find('div', attrs={'data-testid': 'prism-article-body'}).find('h2')
+
     authors = soup.find_all('a', attrs={'data-testid': 'prism-linkbase'})
     # Work on time div later, too difficult to find it right now
     #time_div = soup.find_all('div', class_=re.compile(r'^[a-zA-Z]+ *[a-zA-Z]+ *[a-zA-Z]+ '))
